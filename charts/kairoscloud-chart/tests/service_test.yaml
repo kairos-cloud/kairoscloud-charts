@@ -1,0 +1,84 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: service
+templates:
+  - service.yaml
+tests:
+  - it: should create service with default values
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-kairoscloud-chart
+      - equal:
+          path: spec.type
+          value: ClusterIP
+      - equal:
+          path: spec.ports[0].port
+          value: 80
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 8080
+      - equal:
+          path: spec.ports[0].protocol
+          value: TCP
+      - equal:
+          path: spec.ports[0].name
+          value: http
+
+  - it: should create service with custom type
+    set:
+      service:
+        type: LoadBalancer
+        port: 443
+        targetPort: 8443
+    asserts:
+      - equal:
+          path: spec.type
+          value: LoadBalancer
+      - equal:
+          path: spec.ports[0].port
+          value: 443
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 8443
+
+  - it: should create service with NodePort type
+    set:
+      service:
+        type: NodePort
+        port: 80
+        targetPort: 8080
+    asserts:
+      - equal:
+          path: spec.type
+          value: NodePort
+
+  - it: should create headless service when statefulset is enabled
+    set:
+      statefulset.enabled: true
+    documentIndex: 1
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-kairoscloud-chart-headless
+      - equal:
+          path: spec.type
+          value: ClusterIP
+      - equal:
+          path: spec.clusterIP
+          value: None
+      - equal:
+          path: spec.ports[0].port
+          value: 80
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 8080
+      - equal:
+          path: spec.ports[0].protocol
+          value: TCP
+      - equal:
+          path: spec.ports[0].name
+          value: http

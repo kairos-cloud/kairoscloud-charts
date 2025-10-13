@@ -1,0 +1,26 @@
+{{- if and .Values.istio.enabled .Values.istio.authorizationPolicy.enabled }}
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: {{ include "kairoscloud-chart.fullname" . }}
+  labels:
+    {{- include "kairoscloud-chart.labels" . | nindent 4 }}
+  {{- with .Values.istio.authorizationPolicy.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.istio.authorizationPolicy.selector }}
+  selector:
+    {{- toYaml .Values.istio.authorizationPolicy.selector | nindent 4 }}
+  {{- else }}
+  selector:
+    matchLabels:
+      {{- include "kairoscloud-chart.selectorLabels" . | nindent 6 }}
+  {{- end }}
+  action: {{ .Values.istio.authorizationPolicy.action }}
+  {{- if .Values.istio.authorizationPolicy.rules }}
+  rules:
+    {{- toYaml .Values.istio.authorizationPolicy.rules | nindent 4 }}
+  {{- end }}
+{{- end }}

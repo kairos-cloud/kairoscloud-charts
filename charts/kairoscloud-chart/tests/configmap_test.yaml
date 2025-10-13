@@ -1,0 +1,75 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: configmap
+templates:
+  - configmap.yaml
+tests:
+  - it: should create configmap with default values
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-kairoscloud-chart-config
+      - equal:
+          path: data
+          value: {}
+
+  - it: should create configmap with simple key-value data
+    set:
+      configMap:
+        enabled: true
+        data:
+          key1: value1
+          key2: value2
+          key3: value3
+    asserts:
+      - equal:
+          path: data.key1
+          value: value1
+      - equal:
+          path: data.key2
+          value: value2
+      - equal:
+          path: data.key3
+          value: value3
+
+  - it: should create configmap with multiline data
+    set:
+      configMap:
+        enabled: true
+        data:
+          app_properties: |
+            server.port=8080
+            logging.level=INFO
+            database.host=localhost
+            database.port=5432
+          database_properties: |
+            db.host=postgresql
+            db.port=5432
+            db.name=kairoscloud
+            db.username=admin
+    asserts:
+      - equal:
+          path: data.app_properties
+          value: |
+            server.port=8080
+            logging.level=INFO
+            database.host=localhost
+            database.port=5432
+      - equal:
+          path: data.database_properties
+          value: |
+            db.host=postgresql
+            db.port=5432
+            db.name=kairoscloud
+            db.username=admin
+
+  - it: should create configmap with empty data
+    set:
+      configMap:
+        enabled: true
+        data: {}
+    asserts:
+      - equal:
+          path: data
+          value: {}

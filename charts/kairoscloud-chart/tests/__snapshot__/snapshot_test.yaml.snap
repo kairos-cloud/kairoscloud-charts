@@ -1,0 +1,633 @@
+should match snapshot for certificate configuration:
+  1: |
+    replicas: 1
+    selector:
+      matchLabels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/name: kairoscloud-chart
+    template:
+      metadata:
+        labels:
+          app.kubernetes.io/instance: RELEASE-NAME
+          app.kubernetes.io/name: kairoscloud-chart
+      spec:
+        containers:
+          - image: nginx:1.0.0
+            imagePullPolicy: IfNotPresent
+            livenessProbe:
+              enabled: true
+              failureThreshold: 3
+              httpGet:
+                path: /health
+                port: http
+              initialDelaySeconds: 30
+              periodSeconds: 10
+              timeoutSeconds: 5
+            name: kairoscloud-chart
+            ports:
+              - containerPort: 8080
+                name: http
+                protocol: TCP
+            readinessProbe:
+              enabled: true
+              failureThreshold: 3
+              httpGet:
+                path: /ready
+                port: http
+              initialDelaySeconds: 5
+              periodSeconds: 5
+              timeoutSeconds: 3
+            resources:
+              limits:
+                cpu: 500m
+                memory: 512Mi
+              requests:
+                cpu: 250m
+                memory: 256Mi
+            securityContext:
+              capabilities:
+                drop:
+                  - ALL
+              readOnlyRootFilesystem: true
+              runAsNonRoot: true
+              runAsUser: 1000
+        securityContext:
+          fsGroup: 2000
+        serviceAccountName: RELEASE-NAME-kairoscloud-chart
+  2: |
+    ports:
+      - name: http
+        port: 80
+        protocol: TCP
+        targetPort: 8080
+    selector:
+      app.kubernetes.io/instance: RELEASE-NAME
+      app.kubernetes.io/name: kairoscloud-chart
+    type: ClusterIP
+  3: |
+    dnsNames:
+      - example.com
+    issuerRef:
+      group: cert-manager.io
+      kind: ClusterIssuer
+      name: letsencrypt-prod
+    privateKey:
+      algorithm: RSA
+      size: 2048
+    secretName: RELEASE-NAME-kairoscloud-chart-tls
+should match snapshot for configmap with data:
+  1: |
+    app.properties: |
+      server.port=8080
+      logging.level=INFO
+should match snapshot for default deployment:
+  1: |
+    containers:
+      - image: nginx:1.0.0
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          enabled: true
+          failureThreshold: 3
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+        name: kairoscloud-chart
+        ports:
+          - containerPort: 8080
+            name: http
+            protocol: TCP
+        readinessProbe:
+          enabled: true
+          failureThreshold: 3
+          httpGet:
+            path: /ready
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 250m
+            memory: 256Mi
+        securityContext:
+          capabilities:
+            drop:
+              - ALL
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+    securityContext:
+      fsGroup: 2000
+    serviceAccountName: RELEASE-NAME-kairoscloud-chart
+  2: |
+    image: nginx:1.0.0
+    imagePullPolicy: IfNotPresent
+    livenessProbe:
+      enabled: true
+      failureThreshold: 3
+      httpGet:
+        path: /health
+        port: http
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+    name: kairoscloud-chart
+    ports:
+      - containerPort: 8080
+        name: http
+        protocol: TCP
+    readinessProbe:
+      enabled: true
+      failureThreshold: 3
+      httpGet:
+        path: /ready
+        port: http
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      timeoutSeconds: 3
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+    securityContext:
+      capabilities:
+        drop:
+          - ALL
+      readOnlyRootFilesystem: true
+      runAsNonRoot: true
+      runAsUser: 1000
+should match snapshot for hpa configuration:
+  1: |
+    selector:
+      matchLabels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/name: kairoscloud-chart
+    template:
+      metadata:
+        labels:
+          app.kubernetes.io/instance: RELEASE-NAME
+          app.kubernetes.io/name: kairoscloud-chart
+      spec:
+        containers:
+          - image: nginx:1.0.0
+            imagePullPolicy: IfNotPresent
+            livenessProbe:
+              enabled: true
+              failureThreshold: 3
+              httpGet:
+                path: /health
+                port: http
+              initialDelaySeconds: 30
+              periodSeconds: 10
+              timeoutSeconds: 5
+            name: kairoscloud-chart
+            ports:
+              - containerPort: 8080
+                name: http
+                protocol: TCP
+            readinessProbe:
+              enabled: true
+              failureThreshold: 3
+              httpGet:
+                path: /ready
+                port: http
+              initialDelaySeconds: 5
+              periodSeconds: 5
+              timeoutSeconds: 3
+            resources:
+              limits:
+                cpu: 500m
+                memory: 512Mi
+              requests:
+                cpu: 250m
+                memory: 256Mi
+            securityContext:
+              capabilities:
+                drop:
+                  - ALL
+              readOnlyRootFilesystem: true
+              runAsNonRoot: true
+              runAsUser: 1000
+        securityContext:
+          fsGroup: 2000
+        serviceAccountName: RELEASE-NAME-kairoscloud-chart
+  2: |
+    ports:
+      - name: http
+        port: 80
+        protocol: TCP
+        targetPort: 8080
+    selector:
+      app.kubernetes.io/instance: RELEASE-NAME
+      app.kubernetes.io/name: kairoscloud-chart
+    type: ClusterIP
+  3: |
+    maxReplicas: 10
+    metrics:
+      - resource:
+          name: cpu
+          target:
+            averageUtilization: 80
+            type: Utilization
+        type: Resource
+    minReplicas: 2
+    scaleTargetRef:
+      apiVersion: apps/v1
+      kind: Deployment
+      name: RELEASE-NAME-kairoscloud-chart
+should match snapshot for ingress configuration:
+  1: |
+    replicas: 1
+    selector:
+      matchLabels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/name: kairoscloud-chart
+    template:
+      metadata:
+        labels:
+          app.kubernetes.io/instance: RELEASE-NAME
+          app.kubernetes.io/name: kairoscloud-chart
+      spec:
+        containers:
+          - image: nginx:1.0.0
+            imagePullPolicy: IfNotPresent
+            livenessProbe:
+              enabled: true
+              failureThreshold: 3
+              httpGet:
+                path: /health
+                port: http
+              initialDelaySeconds: 30
+              periodSeconds: 10
+              timeoutSeconds: 5
+            name: kairoscloud-chart
+            ports:
+              - containerPort: 8080
+                name: http
+                protocol: TCP
+            readinessProbe:
+              enabled: true
+              failureThreshold: 3
+              httpGet:
+                path: /ready
+                port: http
+              initialDelaySeconds: 5
+              periodSeconds: 5
+              timeoutSeconds: 3
+            resources:
+              limits:
+                cpu: 500m
+                memory: 512Mi
+              requests:
+                cpu: 250m
+                memory: 256Mi
+            securityContext:
+              capabilities:
+                drop:
+                  - ALL
+              readOnlyRootFilesystem: true
+              runAsNonRoot: true
+              runAsUser: 1000
+        securityContext:
+          fsGroup: 2000
+        serviceAccountName: RELEASE-NAME-kairoscloud-chart
+  2: |
+    ports:
+      - name: http
+        port: 80
+        protocol: TCP
+        targetPort: 8080
+    selector:
+      app.kubernetes.io/instance: RELEASE-NAME
+      app.kubernetes.io/name: kairoscloud-chart
+    type: ClusterIP
+  3: |
+    ingressClassName: nginx
+    rules:
+      - host: example.com
+        http:
+          paths:
+            - backend:
+                service:
+                  name: RELEASE-NAME-kairoscloud-chart
+                  port:
+                    number: 80
+              path: /
+              pathType: Prefix
+should match snapshot for monitoring configuration:
+  1: |
+    interval: 30s
+    path: /metrics
+    port: http
+    scheme: http
+    scrapeTimeout: 10s
+  2: |
+    replicas: 1
+    selector:
+      matchLabels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/name: kairoscloud-chart
+    template:
+      metadata:
+        labels:
+          app.kubernetes.io/instance: RELEASE-NAME
+          app.kubernetes.io/name: kairoscloud-chart
+      spec:
+        containers:
+          - image: nginx:1.0.0
+            imagePullPolicy: IfNotPresent
+            livenessProbe:
+              enabled: true
+              failureThreshold: 3
+              httpGet:
+                path: /health
+                port: http
+              initialDelaySeconds: 30
+              periodSeconds: 10
+              timeoutSeconds: 5
+            name: kairoscloud-chart
+            ports:
+              - containerPort: 8080
+                name: http
+                protocol: TCP
+            readinessProbe:
+              enabled: true
+              failureThreshold: 3
+              httpGet:
+                path: /ready
+                port: http
+              initialDelaySeconds: 5
+              periodSeconds: 5
+              timeoutSeconds: 3
+            resources:
+              limits:
+                cpu: 500m
+                memory: 512Mi
+              requests:
+                cpu: 250m
+                memory: 256Mi
+            securityContext:
+              capabilities:
+                drop:
+                  - ALL
+              readOnlyRootFilesystem: true
+              runAsNonRoot: true
+              runAsUser: 1000
+        securityContext:
+          fsGroup: 2000
+        serviceAccountName: RELEASE-NAME-kairoscloud-chart
+  3: |
+    ports:
+      - name: http
+        port: 80
+        protocol: TCP
+        targetPort: 8080
+    selector:
+      app.kubernetes.io/instance: RELEASE-NAME
+      app.kubernetes.io/name: kairoscloud-chart
+    type: ClusterIP
+  4: |
+    endpoints:
+      - interval: 30s
+        path: /metrics
+        port: http
+        scheme: http
+        scrapeTimeout: 10s
+    selector:
+      matchLabels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/name: kairoscloud-chart
+  5: |
+    dnsNames:
+      - kairoscloud.example.com
+    issuerRef:
+      group: cert-manager.io
+      kind: ClusterIssuer
+      name: letsencrypt-prod
+    privateKey:
+      algorithm: RSA
+      size: 2048
+    secretName: RELEASE-NAME-kairoscloud-chart-tls
+should match snapshot for poddisruptionbudget:
+  1: |
+    replicas: 1
+    selector:
+      matchLabels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/name: kairoscloud-chart
+    template:
+      metadata:
+        labels:
+          app.kubernetes.io/instance: RELEASE-NAME
+          app.kubernetes.io/name: kairoscloud-chart
+      spec:
+        containers:
+          - image: nginx:1.0.0
+            imagePullPolicy: IfNotPresent
+            livenessProbe:
+              enabled: true
+              failureThreshold: 3
+              httpGet:
+                path: /health
+                port: http
+              initialDelaySeconds: 30
+              periodSeconds: 10
+              timeoutSeconds: 5
+            name: kairoscloud-chart
+            ports:
+              - containerPort: 8080
+                name: http
+                protocol: TCP
+            readinessProbe:
+              enabled: true
+              failureThreshold: 3
+              httpGet:
+                path: /ready
+                port: http
+              initialDelaySeconds: 5
+              periodSeconds: 5
+              timeoutSeconds: 3
+            resources:
+              limits:
+                cpu: 500m
+                memory: 512Mi
+              requests:
+                cpu: 250m
+                memory: 256Mi
+            securityContext:
+              capabilities:
+                drop:
+                  - ALL
+              readOnlyRootFilesystem: true
+              runAsNonRoot: true
+              runAsUser: 1000
+        securityContext:
+          fsGroup: 2000
+        serviceAccountName: RELEASE-NAME-kairoscloud-chart
+  2: |
+    ports:
+      - name: http
+        port: 80
+        protocol: TCP
+        targetPort: 8080
+    selector:
+      app.kubernetes.io/instance: RELEASE-NAME
+      app.kubernetes.io/name: kairoscloud-chart
+    type: ClusterIP
+  3: |
+    minAvailable: 1
+    selector:
+      matchLabels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/name: kairoscloud-chart
+should match snapshot for production configuration:
+  1: |
+    containers:
+      - image: nginx:1.0.0
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          enabled: true
+          failureThreshold: 3
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+        name: kairoscloud-chart
+        ports:
+          - containerPort: 8080
+            name: http
+            protocol: TCP
+        readinessProbe:
+          enabled: true
+          failureThreshold: 3
+          httpGet:
+            path: /ready
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 250m
+            memory: 256Mi
+        securityContext:
+          capabilities:
+            drop:
+              - ALL
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 1000
+    securityContext:
+      fsGroup: 2000
+    serviceAccountName: RELEASE-NAME-kairoscloud-chart
+should match snapshot for secret with stringData:
+  1: |
+    api-key: sk-1234567890abcdef
+    database-password: super-secret-password
+should match snapshot for security configuration:
+  1: |
+    capabilities:
+      drop:
+        - ALL
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    runAsUser: 1000
+  2: |
+    fsGroup: 2000
+should match snapshot for service configuration:
+  1: |
+    replicas: 1
+    selector:
+      matchLabels:
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/name: kairoscloud-chart
+    template:
+      metadata:
+        labels:
+          app.kubernetes.io/instance: RELEASE-NAME
+          app.kubernetes.io/name: kairoscloud-chart
+      spec:
+        containers:
+          - image: nginx:1.0.0
+            imagePullPolicy: IfNotPresent
+            livenessProbe:
+              enabled: true
+              failureThreshold: 3
+              httpGet:
+                path: /health
+                port: http
+              initialDelaySeconds: 30
+              periodSeconds: 10
+              timeoutSeconds: 5
+            name: kairoscloud-chart
+            ports:
+              - containerPort: 8080
+                name: http
+                protocol: TCP
+            readinessProbe:
+              enabled: true
+              failureThreshold: 3
+              httpGet:
+                path: /ready
+                port: http
+              initialDelaySeconds: 5
+              periodSeconds: 5
+              timeoutSeconds: 3
+            resources:
+              limits:
+                cpu: 500m
+                memory: 512Mi
+              requests:
+                cpu: 250m
+                memory: 256Mi
+            securityContext:
+              capabilities:
+                drop:
+                  - ALL
+              readOnlyRootFilesystem: true
+              runAsNonRoot: true
+              runAsUser: 1000
+        securityContext:
+          fsGroup: 2000
+        serviceAccountName: RELEASE-NAME-kairoscloud-chart
+  2: |
+    ports:
+      - name: http
+        port: 80
+        protocol: TCP
+        targetPort: 8080
+    selector:
+      app.kubernetes.io/instance: RELEASE-NAME
+      app.kubernetes.io/name: kairoscloud-chart
+    type: ClusterIP
+should match snapshot for servicemonitor configuration:
+  1: |
+    interval: 30s
+    path: /metrics
+    port: http
+    scheme: http
+    scrapeTimeout: 10s
+should match snapshot for statefulset with persistence:
+  1: |
+    metadata:
+      name: data
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 8Gi

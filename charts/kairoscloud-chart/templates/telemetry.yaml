@@ -1,0 +1,33 @@
+{{- if and .Values.istio.enabled .Values.istio.telemetry.enabled }}
+apiVersion: telemetry.istio.io/v1alpha1
+kind: Telemetry
+metadata:
+  name: {{ include "kairoscloud-chart.fullname" . }}
+  labels:
+    {{- include "kairoscloud-chart.labels" . | nindent 4 }}
+  {{- with .Values.istio.telemetry.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.istio.telemetry.selector }}
+  selector:
+    {{- toYaml .Values.istio.telemetry.selector | nindent 4 }}
+  {{- else }}
+  selector:
+    matchLabels:
+      {{- include "kairoscloud-chart.selectorLabels" . | nindent 6 }}
+  {{- end }}
+  {{- if .Values.istio.telemetry.metrics }}
+  metrics:
+    {{- toYaml .Values.istio.telemetry.metrics | nindent 4 }}
+  {{- end }}
+  {{- if .Values.istio.telemetry.accessLogging }}
+  accessLogging:
+    {{- toYaml .Values.istio.telemetry.accessLogging | nindent 4 }}
+  {{- end }}
+  {{- if .Values.istio.telemetry.tracing }}
+  tracing:
+    {{- toYaml .Values.istio.telemetry.tracing | nindent 4 }}
+  {{- end }}
+{{- end }}

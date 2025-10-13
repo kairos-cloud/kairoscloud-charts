@@ -1,0 +1,25 @@
+{{- if and .Values.istio.enabled .Values.istio.requestAuthentication.enabled }}
+apiVersion: security.istio.io/v1beta1
+kind: RequestAuthentication
+metadata:
+  name: {{ include "kairoscloud-chart.fullname" . }}
+  labels:
+    {{- include "kairoscloud-chart.labels" . | nindent 4 }}
+  {{- with .Values.istio.requestAuthentication.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.istio.requestAuthentication.selector }}
+  selector:
+    {{- toYaml .Values.istio.requestAuthentication.selector | nindent 4 }}
+  {{- else }}
+  selector:
+    matchLabels:
+      {{- include "kairoscloud-chart.selectorLabels" . | nindent 6 }}
+  {{- end }}
+  {{- if .Values.istio.requestAuthentication.jwtRules }}
+  jwtRules:
+    {{- toYaml .Values.istio.requestAuthentication.jwtRules | nindent 4 }}
+  {{- end }}
+{{- end }}

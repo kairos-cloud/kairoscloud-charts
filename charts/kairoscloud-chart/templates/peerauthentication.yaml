@@ -1,0 +1,29 @@
+{{- if and .Values.istio.enabled .Values.istio.peerAuthentication.enabled }}
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: {{ include "kairoscloud-chart.fullname" . }}
+  labels:
+    {{- include "kairoscloud-chart.labels" . | nindent 4 }}
+  {{- with .Values.istio.peerAuthentication.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.istio.peerAuthentication.selector }}
+  selector:
+    {{- toYaml .Values.istio.peerAuthentication.selector | nindent 4 }}
+  {{- else }}
+  selector:
+    matchLabels:
+      {{- include "kairoscloud-chart.selectorLabels" . | nindent 6 }}
+  {{- end }}
+  {{- if .Values.istio.peerAuthentication.mtls }}
+  mtls:
+    {{- toYaml .Values.istio.peerAuthentication.mtls | nindent 4 }}
+  {{- end }}
+  {{- if .Values.istio.peerAuthentication.portLevelMtls }}
+  portLevelMtls:
+    {{- toYaml .Values.istio.peerAuthentication.portLevelMtls | nindent 4 }}
+  {{- end }}
+{{- end }}

@@ -1,0 +1,142 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: gateway
+templates:
+  - gateway.yaml
+tests:
+  - it: should create gateway with basic configuration
+    set:
+      istio:
+        enabled: true
+        gateway:
+          enabled: true
+          selector:
+            istio: ingressgateway
+          servers:
+            - port:
+                number: 80
+                name: http
+                protocol: HTTP
+              hosts:
+              - kairoscloud.example.com
+    asserts:
+      - isKind:
+          of: Gateway
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-kairoscloud-chart
+      - equal:
+          path: spec.selector.istio
+          value: ingressgateway
+      - equal:
+          path: spec.servers[0].port.number
+          value: 80
+      - equal:
+          path: spec.servers[0].hosts[0]
+          value: kairoscloud.example.com
+
+  - it: should create gateway with default selector
+    set:
+      istio:
+        enabled: true
+        gateway:
+          enabled: true
+          servers: []
+    asserts:
+      - isKind:
+          of: Gateway
+      - equal:
+          path: spec.selector.istio
+          value: ingressgateway
+
+  - it: should create gateway with custom selector
+    set:
+      istio:
+        enabled: true
+        gateway:
+          enabled: true
+          selector:
+            app: custom-gateway
+          servers: []
+    asserts:
+      - isKind:
+          of: Gateway
+      - equal:
+          path: spec.selector.app
+          value: custom-gateway
+
+  - it: should create gateway with annotations
+    set:
+      istio:
+        enabled: true
+        gateway:
+          enabled: true
+          servers: []
+          annotations:
+            test-annotation: "test-value"
+    asserts:
+      - isKind:
+          of: Gateway
+      - equal:
+          path: metadata.annotations.test-annotation
+          value: "test-value"
+
+  - it: should create gateway with https server
+    set:
+      istio:
+        enabled: true
+        gateway:
+          enabled: true
+          servers:
+            - port:
+                number: 443
+                name: https
+                protocol: HTTPS
+              tls:
+                mode: SIMPLE
+                credentialName: kairoscloud-tls
+              hosts:
+              - kairoscloud.example.com
+    asserts:
+      - isKind:
+          of: Gateway
+      - equal:
+          path: spec.servers[0].port.protocol
+          value: HTTPS
+      - equal:
+          path: spec.servers[0].tls.mode
+          value: SIMPLE
+      - equal:
+          path: spec.servers[0].tls.credentialName
+          value: kairoscloud-tls
+
+  - it: should create gateway with multiple servers
+    set:
+      istio:
+        enabled: true
+        gateway:
+          enabled: true
+          servers:
+            - port:
+                number: 80
+                name: http
+                protocol: HTTP
+              hosts:
+              - kairoscloud.example.com
+            - port:
+                number: 443
+                name: https
+                protocol: HTTPS
+              tls:
+                mode: SIMPLE
+                credentialName: kairoscloud-tls
+              hosts:
+              - kairoscloud.example.com
+    asserts:
+      - isKind:
+          of: Gateway
+      - equal:
+          path: spec.servers[0].port.number
+          value: 80
+      - equal:
+          path: spec.servers[1].port.number
+          value: 443

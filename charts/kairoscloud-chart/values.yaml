@@ -1,0 +1,520 @@
+# Default values for kairoscloud-chart.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: nginx
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  fsGroup: 2000
+
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+  annotations: {}
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources:
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# StatefulSet specific configuration
+statefulset:
+  enabled: false
+  serviceName: ""
+  podManagementPolicy: OrderedReady
+  updateStrategy:
+    type: RollingUpdate
+
+# PersistentVolumeClaim configuration
+persistence:
+  enabled: false
+  storageClass: ""
+  accessMode: ReadWriteOnce
+  size: 8Gi
+  annotations: {}
+
+# ConfigMap configuration
+configMap:
+  enabled: true
+  data: {}
+    # key1: value1
+    # key2: value2
+
+# PodDisruptionBudget configuration
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+  # maxUnavailable: 1
+
+# Additional environment variables
+env: []
+  # - name: ENV_VAR_NAME
+  #   value: "value"
+
+# Additional volumes
+extraVolumes: []
+  # - name: extra-volume
+  #   configMap:
+  #     name: extra-config
+
+# Additional volume mounts
+extraVolumeMounts: []
+  # - name: extra-volume
+  #   mountPath: /extra/path
+
+# Liveness and readiness probes
+livenessProbe:
+  enabled: true
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  enabled: true
+  httpGet:
+    path: /ready
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+# Startup probe
+startupProbe:
+  enabled: false
+  httpGet:
+    path: /startup
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 1
+  failureThreshold: 30
+
+# NetworkPolicy configuration
+networkPolicy:
+  enabled: false
+  ingress:
+    enabled: true
+    namespaceSelector: {}
+    podSelector: {}
+    ipBlocks: []
+    ports:
+      - protocol: TCP
+        port: 80
+  egress:
+    enabled: true
+    namespaceSelector: {}
+    podSelector: {}
+    ipBlocks: []
+    ports:
+      - protocol: TCP
+        port: 53
+      - protocol: UDP
+        port: 53
+
+# Secret configuration
+secret:
+  enabled: false
+  type: Opaque
+  annotations: {}
+  data: {}
+    # key1: value1
+    # key2: value2
+  stringData: {}
+    # key1: value1
+    # key2: value2
+
+# RBAC configuration
+rbac:
+  enabled: false
+  rules: []
+    # - apiGroups: [""]
+    #   resources: ["pods"]
+    #   verbs: ["get", "list", "watch"]
+  clusterRole:
+    enabled: false
+    rules: []
+      # - apiGroups: [""]
+      #   resources: ["nodes"]
+      #   verbs: ["get", "list", "watch"]
+
+# ServiceMonitor configuration (Prometheus)
+serviceMonitor:
+  enabled: false
+  labels: {}
+  annotations: {}
+  port: http
+  path: /metrics
+  interval: 30s
+  scrapeTimeout: 10s
+  scheme: http
+  tlsConfig: {}
+  bearerTokenSecret: {}
+  basicAuth: {}
+  namespaceSelector: {}
+  sampleLimit: 0
+
+# Certificate configuration (cert-manager)
+certificate:
+  enabled: false
+  annotations: {}
+  issuerRef:
+    name: ""
+    kind: Issuer
+    group: cert-manager.io
+  dnsNames: []
+    # - example.com
+    # - www.example.com
+  commonName: ""
+  duration: ""
+  renewBefore: ""
+  usages: []
+  keyAlgorithm: RSA
+  keySize: 2048
+
+# VolumeSnapshot configuration
+volumeSnapshot:
+  enabled: false
+  annotations: {}
+  source:
+    persistentVolumeClaimName: ""
+    volumeSnapshotContentName: ""
+  volumeSnapshotClassName: ""
+
+# CronJob configuration
+cronJob:
+  enabled: false
+  annotations: {}
+  schedule: "0 0 * * *"  # Daily at midnight
+  timeZone: ""
+  concurrencyPolicy: Allow
+  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 3
+  suspend: false
+  activeDeadlineSeconds: 0
+  backoffLimit: 6
+  ttlSecondsAfterFinished: 0
+  restartPolicy: OnFailure
+  image:
+    repository: nginx
+    tag: ""
+    pullPolicy: IfNotPresent
+  imagePullSecrets: []
+  command: []
+  args: []
+  env: []
+  resources: {}
+  volumeMounts: []
+  volumes: []
+  nodeSelector: {}
+  affinity: {}
+  tolerations: []
+  securityContext: {}
+
+# LimitRange configuration
+limitRange:
+  enabled: false
+  annotations: {}
+  limits: []
+    # - type: Container
+    #   max:
+    #     cpu: 2
+    #     memory: 4Gi
+    #   min:
+    #     cpu: 100m
+    #     memory: 128Mi
+    #   default:
+    #     cpu: 500m
+    #     memory: 512Mi
+    #   defaultRequest:
+    #     cpu: 250m
+    #     memory: 256Mi
+
+# ResourceQuota configuration
+resourceQuota:
+  enabled: false
+  annotations: {}
+  hard: {}
+    # requests.cpu: "2"
+    # requests.memory: 4Gi
+    # limits.cpu: "4"
+    # limits.memory: 8Gi
+    # pods: "10"
+    # services: "5"
+    # persistentvolumeclaims: "4"
+  scopeSelector: {}
+  scopes: []
+
+# Job configuration
+job:
+  enabled: false
+  annotations: {}
+  activeDeadlineSeconds: 0
+  backoffLimit: 6
+  completions: 1
+  parallelism: 1
+  ttlSecondsAfterFinished: 0
+  restartPolicy: Never
+  image:
+    repository: nginx
+    tag: ""
+    pullPolicy: IfNotPresent
+  imagePullSecrets: []
+  command: []
+  args: []
+  env: []
+  resources: {}
+  volumeMounts: []
+  volumes: []
+  nodeSelector: {}
+  affinity: {}
+  tolerations: []
+  securityContext: {}
+
+# Istio Service Mesh configuration
+istio:
+  enabled: false
+  
+  # VirtualService configuration for traffic management
+  virtualService:
+    enabled: false
+    annotations: {}
+    hosts: []
+      # - kairoscloud.example.com
+    gateways: []
+      # - kairoscloud-gateway
+    http: []
+      # - match:
+      #   - uri:
+      #       prefix: /api
+      #   route:
+      #   - destination:
+      #       host: kairoscloud-chart
+      #       port:
+      #         number: 80
+    tcp: []
+    tls: []
+    
+  # AuthorizationPolicy configuration for access control
+  authorizationPolicy:
+    enabled: false
+    annotations: {}
+    action: ALLOW
+    selector: {}
+    rules: []
+      # - from:
+      #   - source:
+      #       principals: ["cluster.local/ns/default/sa/sleep"]
+      #   to:
+      #   - operation:
+      #       methods: ["GET"]
+    
+  # PeerAuthentication configuration for mTLS
+  peerAuthentication:
+    enabled: false
+    annotations: {}
+    selector: {}
+    mtls:
+      mode: STRICT
+    portLevelMtls: {}
+      # 8080:
+      #   mode: DISABLE
+    
+  # RequestAuthentication configuration for JWT authentication
+  requestAuthentication:
+    enabled: false
+    annotations: {}
+    selector: {}
+    jwtRules: []
+      # - issuer: "https://example.com"
+      #   jwksUri: "https://example.com/.well-known/jwks.json"
+      #   audiences: ["api"]
+    
+  # Gateway configuration for ingress/egress
+  gateway:
+    enabled: false
+    annotations: {}
+    selector: {}
+      # istio: ingressgateway
+    servers: []
+      # - port:
+      #     number: 80
+      #     name: http
+      #     protocol: HTTP
+      #   hosts:
+      #   - kairoscloud.example.com
+    
+  # Telemetry configuration for observability
+  telemetry:
+    enabled: false
+    annotations: {}
+    selector: {}
+    metrics: []
+      # - providers:
+      #   - name: prometheus
+    accessLogging: []
+      # - providers:
+      #   - name: otel
+    tracing: {}
+      # providers:
+      # - name: jaeger
+
+# KEDA (Kubernetes Event-Driven Autoscaling) configuration
+keda:
+  enabled: false
+  annotations: {}
+  # Minimum number of replicas (defaults to autoscaling.minReplicas if not set)
+  minReplicas: null
+  # Maximum number of replicas (defaults to autoscaling.maxReplicas if not set)
+  maxReplicas: null
+  # Polling interval for metrics (e.g., "30s", "1m")
+  pollingInterval: null
+  # Cooldown period for scaling down (e.g., "300s", "5m")
+  cooldownPeriod: null
+  # Number of replicas to maintain when idle (defaults to 0)
+  idleReplicaCount: null
+  # Advanced KEDA configuration
+  advanced: {}
+    # horizontalPodAutoscalerConfig:
+    #   behavior:
+    #     scaleDown:
+    #       stabilizationWindowSeconds: 300
+    #       policies:
+    #       - type: Percent
+    #         value: 50
+    #         periodSeconds: 60
+    #     scaleUp:
+    #       stabilizationWindowSeconds: 0
+    #       policies:
+    #       - type: Percent
+    #         value: 100
+    #         periodSeconds: 15
+  # KEDA triggers configuration
+  triggers: []
+    # Example CPU trigger:
+    # - type: cpu
+    #   metadata:
+    #     type: Utilization
+    #     value: "70"
+    #   metricType: Utilization
+    # 
+    # Example memory trigger:
+    # - type: memory
+    #   metadata:
+    #     type: Utilization
+    #     value: "80"
+    #   metricType: Utilization
+    #
+    # Example Prometheus trigger:
+    # - type: prometheus
+    #   metadata:
+    #     serverAddress: http://prometheus-server.monitoring.svc.cluster.local:80
+    #     metricName: http_requests_per_second
+    #     threshold: '100'
+    #     query: sum(rate(http_requests_total[2m]))
+    #   metricType: AverageValue
+    #
+    # Example Kafka trigger:
+    # - type: kafka
+    #   metadata:
+    #     bootstrapServers: kafka-server:9092
+    #     consumerGroup: my-group
+    #     topic: my-topic
+    #     lagThreshold: '5'
+    #   authenticationRef:
+    #     name: kafka-auth
+    #     kind: Secret
+    #
+    # Example Redis trigger:
+    # - type: redis
+    #   metadata:
+    #     address: redis-server:6379
+    #     listName: mylist
+    #     listLength: '5'
+    #   authenticationRef:
+    #     name: redis-auth
+    #     kind: Secret
+    #
+    # Example HTTP trigger:
+    # - type: http
+    #   metadata:
+    #     url: http://api.example.com/metrics
+    #     valueLocation: 'body'
+    #     targetValue: '100'
+    #   authenticationRef:
+    #     name: http-auth
+    #     kind: Secret
+  # Global fallback configuration
+  fallback: {}
+    # failureThreshold: 3
+    # replicas: 1

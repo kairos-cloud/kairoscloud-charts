@@ -1,0 +1,153 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: telemetry
+templates:
+  - telemetry.yaml
+tests:
+  - it: should create telemetry with basic configuration
+    set:
+      istio:
+        enabled: true
+        telemetry:
+          enabled: true
+          metrics:
+            - providers:
+              - name: prometheus
+          accessLogging:
+            - providers:
+              - name: otel
+          tracing:
+            providers:
+            - name: jaeger
+    asserts:
+      - isKind:
+          of: Telemetry
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-kairoscloud-chart
+      - equal:
+          path: spec.metrics[0].providers[0].name
+          value: prometheus
+      - equal:
+          path: spec.accessLogging[0].providers[0].name
+          value: otel
+      - equal:
+          path: spec.tracing.providers[0].name
+          value: jaeger
+
+  - it: should create telemetry with default selector
+    set:
+      istio:
+        enabled: true
+        telemetry:
+          enabled: true
+          metrics: []
+    asserts:
+      - isKind:
+          of: Telemetry
+
+  - it: should create telemetry with custom selector
+    set:
+      istio:
+        enabled: true
+        telemetry:
+          enabled: true
+          metrics: []
+          selector:
+            matchLabels:
+              app: custom-app
+    asserts:
+      - isKind:
+          of: Telemetry
+      - equal:
+          path: spec.selector.matchLabels.app
+          value: custom-app
+
+  - it: should create telemetry with annotations
+    set:
+      istio:
+        enabled: true
+        telemetry:
+          enabled: true
+          metrics: []
+          annotations:
+            test-annotation: "test-value"
+    asserts:
+      - isKind:
+          of: Telemetry
+      - equal:
+          path: metadata.annotations.test-annotation
+          value: "test-value"
+
+  - it: should create telemetry with metrics only
+    set:
+      istio:
+        enabled: true
+        telemetry:
+          enabled: true
+          metrics:
+            - providers:
+              - name: prometheus
+                overrides:
+                - match:
+                    metric: ALL_METRICS
+                  tagOverrides:
+                    request_protocol:
+                      value: "grpc"
+    asserts:
+      - isKind:
+          of: Telemetry
+      - equal:
+          path: spec.metrics[0].providers[0].name
+          value: prometheus
+      - equal:
+          path: spec.metrics[0].providers[0].overrides[0].match.metric
+          value: ALL_METRICS
+
+  - it: should create telemetry with access logging only
+    set:
+      istio:
+        enabled: true
+        telemetry:
+          enabled: true
+          accessLogging:
+            - providers:
+              - name: otel
+                overrides:
+                - match:
+                    mode: CLIENT_AND_SERVER
+                  disabled: false
+    asserts:
+      - isKind:
+          of: Telemetry
+      - equal:
+          path: spec.accessLogging[0].providers[0].name
+          value: otel
+      - equal:
+          path: spec.accessLogging[0].providers[0].overrides[0].match.mode
+          value: CLIENT_AND_SERVER
+
+  - it: should create telemetry with tracing only
+    set:
+      istio:
+        enabled: true
+        telemetry:
+          enabled: true
+          tracing:
+            providers:
+            - name: jaeger
+              overrides:
+              - match:
+                  mode: CLIENT_AND_SERVER
+                customTags:
+                  request_id:
+                    header:
+                      name: x-request-id
+    asserts:
+      - isKind:
+          of: Telemetry
+      - equal:
+          path: spec.tracing.providers[0].name
+          value: jaeger
+      - equal:
+          path: spec.tracing.providers[0].overrides[0].match.mode
+          value: CLIENT_AND_SERVER
