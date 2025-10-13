@@ -1,6 +1,6 @@
 suite: keda scaledobject tests
 templates:
-  - scaledobject.yaml
+  - keda/scaledobject.yaml
 tests:
   - it: should create scaledobject with basic configuration
     set:

@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
 suite: virtualservice
 templates:
-  - virtualservice.yaml
+  - istio/virtualservice.yaml
 tests:
   - it: should create virtualservice with basic configuration
     set:

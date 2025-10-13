@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
 suite: requestauthentication
 templates:
-  - requestauthentication.yaml
+  - istio/requestauthentication.yaml
 tests:
   - it: should create requestauthentication with basic configuration
     set:

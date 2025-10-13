@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
 suite: authorizationpolicy
 templates:
-  - authorizationpolicy.yaml
+  - istio/authorizationpolicy.yaml
 tests:
   - it: should create authorizationpolicy with basic configuration
     set:

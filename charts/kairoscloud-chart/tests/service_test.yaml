@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
 suite: service
 templates:
-  - service.yaml
+  - core/service.yaml
 tests:
   - it: should create service with default values
     asserts:

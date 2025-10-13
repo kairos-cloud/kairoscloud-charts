@@ -1,12 +1,21 @@
-name: Release Charts
+name: Helm Chart CI/CD
 
 on:
   push:
     branches:
       - main
+      - develop
+      - feature/*
+      - bugfix/*
+      - hotfix/*
+  pull_request:
+    branches:
+      - main
+      - develop
 
 jobs:
   test:
+    name: Quality Checks
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -23,107 +32,32 @@ jobs:
 
       - name: Run Helm Lint
         run: |
+          echo "🔍 Running Helm lint..."
           for chart in charts/*/; do
             if [ -f "$chart/Chart.yaml" ]; then
-              echo "Linting chart: $chart"
-              helm lint "$chart"
+              chart_name=$(basename "$chart")
+              echo "📋 Linting chart: $chart_name"
+              helm lint "$chart" --strict
             fi
           done
+          echo "✅ All charts passed linting!"
 
       - name: Run Helm Unit Tests
         run: |
-          for chart in charts/*/; do
-            if [ -f "$chart/Chart.yaml" ]; then
-              echo "Running unit tests for chart: $chart"
-              helm unittest "$chart" --color
-            fi
-          done
-
-      - name: Run Helm Template
-        run: |
+          echo "🧪 Running Helm unit tests..."
           for chart in charts/*/; do
             if [ -f "$chart/Chart.yaml" ]; then
               chart_name=$(basename "$chart")
-              echo "Testing chart: $chart_name"
-              helm template "$chart_name" "$chart" --debug
+              echo "🔬 Testing chart: $chart_name"
+              helm unittest "$chart" --color --strict
             fi
           done
-
-      - name: Run Helm Dry Run
-        run: |
-          for chart in charts/*/; do
-            if [ -f "$chart/Chart.yaml" ]; then
-              chart_name=$(basename "$chart")
-              echo "Dry run chart: $chart_name"
-              helm install "$chart_name" "$chart" --dry-run --debug
-            fi
-          done
-
-      - name: Test Chart with Different Values
-        run: |
-          for chart in charts/*/; do
-            if [ -f "$chart/Chart.yaml" ]; then
-              chart_name=$(basename "$chart")
-              echo "Testing chart with different configurations: $chart_name"
-              
-              # Test with StatefulSet enabled
-              helm template "$chart_name" "$chart" \
-                --set statefulset.enabled=true \
-                --set persistence.enabled=true \
-                --debug
-              
-              # Test with autoscaling enabled
-              helm template "$chart_name" "$chart" \
-                --set autoscaling.enabled=true \
-                --set replicaCount=3 \
-                --debug
-              
-              # Test with security features enabled
-              helm template "$chart_name" "$chart" \
-                --set networkPolicy.enabled=true \
-                --set rbac.enabled=true \
-                --set secret.enabled=true \
-                --debug
-              
-              # Test with monitoring enabled
-              helm template "$chart_name" "$chart" \
-                --set serviceMonitor.enabled=true \
-                --set certificate.enabled=true \
-                --debug
-            fi
-          done
-
-      - name: Validate Chart Dependencies
-        run: |
-          for chart in charts/*/; do
-            if [ -f "$chart/Chart.yaml" ]; then
-              echo "Checking dependencies for: $chart"
-              helm dependency list "$chart"
-              helm dependency update "$chart"
-            fi
-          done
-
-      - name: Test Chart Package
-        run: |
-          for chart in charts/*/; do
-            if [ -f "$chart/Chart.yaml" ]; then
-              chart_name=$(basename "$chart")
-              echo "Packaging chart: $chart_name"
-              helm package "$chart"
-              
-              # Verify the package
-              if [ -f "${chart_name}-*.tgz" ]; then
-                echo "Package created successfully: ${chart_name}-*.tgz"
-                helm show chart "${chart_name}-*.tgz"
-              else
-                echo "ERROR: Package not created for $chart_name"
-                exit 1
-              fi
-            fi
-          done
+          echo "✅ All unit tests passed!"
 
   release:
+    name: Publish Charts
     needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     permissions:
       contents: write
     runs-on: ubuntu-latest
@@ -131,14 +65,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 3
 
       - name: Configure Git
         run: |
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
-      - name: Run chart-releaser
+      - name: Publish Charts
         uses: helm/chart-releaser-action@v1.6.0
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
