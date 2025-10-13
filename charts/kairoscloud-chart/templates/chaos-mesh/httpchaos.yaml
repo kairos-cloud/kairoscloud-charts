@@ -1,0 +1,54 @@
+{{- if and .Values.chaosMesh.enabled .Values.chaosMesh.httpChaos.enabled }}
+apiVersion: chaos-mesh.org/v1alpha1
+kind: HTTPChaos
+metadata:
+  name: {{ include "kairoscloud-chart.fullname" . }}-http-chaos
+  labels:
+    {{- include "kairoscloud-chart.labels" . | nindent 4 }}
+  {{- with .Values.chaosMesh.httpChaos.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  mode: {{ .Values.chaosMesh.httpChaos.mode | default "one" }}
+  selector:
+    {{- if .Values.chaosMesh.httpChaos.selector }}
+    {{- toYaml .Values.chaosMesh.httpChaos.selector | nindent 4 }}
+    {{- else }}
+    namespaces:
+      - {{ .Release.Namespace }}
+    labelSelectors:
+      app.kubernetes.io/name: {{ include "kairoscloud-chart.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- end }}
+  duration: {{ .Values.chaosMesh.httpChaos.duration | default "30s" }}
+  {{- if .Values.chaosMesh.httpChaos.target }}
+  target: {{ .Values.chaosMesh.httpChaos.target }}
+  {{- end }}
+  {{- if .Values.chaosMesh.httpChaos.port }}
+  port: {{ .Values.chaosMesh.httpChaos.port }}
+  {{- end }}
+  {{- if .Values.chaosMesh.httpChaos.method }}
+  method: {{ .Values.chaosMesh.httpChaos.method }}
+  {{- end }}
+  {{- if .Values.chaosMesh.httpChaos.path }}
+  path: {{ .Values.chaosMesh.httpChaos.path }}
+  {{- end }}
+  {{- if .Values.chaosMesh.httpChaos.code }}
+  code: {{ .Values.chaosMesh.httpChaos.code }}
+  {{- end }}
+  {{- if .Values.chaosMesh.httpChaos.delay }}
+  delay: {{ .Values.chaosMesh.httpChaos.delay }}
+  {{- end }}
+  {{- if .Values.chaosMesh.httpChaos.replace }}
+  replace:
+    {{- toYaml .Values.chaosMesh.httpChaos.replace | nindent 4 }}
+  {{- end }}
+  {{- if .Values.chaosMesh.httpChaos.patch }}
+  patch:
+    {{- toYaml .Values.chaosMesh.httpChaos.patch | nindent 4 }}
+  {{- end }}
+  {{- if .Values.chaosMesh.httpChaos.abort }}
+  abort: {{ .Values.chaosMesh.httpChaos.abort }}
+  {{- end }}
+{{- end }}

@@ -1,0 +1,38 @@
+{{- if and .Values.chaosMesh.enabled .Values.chaosMesh.awsChaos.enabled }}
+apiVersion: chaos-mesh.org/v1alpha1
+kind: AWSChaos
+metadata:
+  name: {{ include "kairoscloud-chart.fullname" . }}-aws-chaos
+  labels:
+    {{- include "kairoscloud-chart.labels" . | nindent 4 }}
+  {{- with .Values.chaosMesh.awsChaos.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  mode: {{ .Values.chaosMesh.awsChaos.mode | default "one" }}
+  selector:
+    {{- if .Values.chaosMesh.awsChaos.selector }}
+    {{- toYaml .Values.chaosMesh.awsChaos.selector | nindent 4 }}
+    {{- else }}
+    namespaces:
+      - {{ .Release.Namespace }}
+    labelSelectors:
+      app.kubernetes.io/name: {{ include "kairoscloud-chart.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- end }}
+  duration: {{ .Values.chaosMesh.awsChaos.duration | default "30s" }}
+  action: {{ .Values.chaosMesh.awsChaos.action | default "ec2-stop" }}
+  {{- if .Values.chaosMesh.awsChaos.awsRegion }}
+  awsRegion: {{ .Values.chaosMesh.awsChaos.awsRegion }}
+  {{- end }}
+  {{- if .Values.chaosMesh.awsChaos.ec2Instance }}
+  ec2Instance: {{ .Values.chaosMesh.awsChaos.ec2Instance }}
+  {{- end }}
+  {{- if .Values.chaosMesh.awsChaos.ec2State }}
+  ec2State: {{ .Values.chaosMesh.awsChaos.ec2State }}
+  {{- end }}
+  {{- if .Values.chaosMesh.awsChaos.secretName }}
+  secretName: {{ .Values.chaosMesh.awsChaos.secretName }}
+  {{- end }}
+{{- end }}

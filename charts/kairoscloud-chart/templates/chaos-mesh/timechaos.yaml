@@ -1,0 +1,34 @@
+{{- if and .Values.chaosMesh.enabled .Values.chaosMesh.timeChaos.enabled }}
+apiVersion: chaos-mesh.org/v1alpha1
+kind: TimeChaos
+metadata:
+  name: {{ include "kairoscloud-chart.fullname" . }}-time-chaos
+  labels:
+    {{- include "kairoscloud-chart.labels" . | nindent 4 }}
+  {{- with .Values.chaosMesh.timeChaos.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  mode: {{ .Values.chaosMesh.timeChaos.mode | default "one" }}
+  selector:
+    {{- if .Values.chaosMesh.timeChaos.selector }}
+    {{- toYaml .Values.chaosMesh.timeChaos.selector | nindent 4 }}
+    {{- else }}
+    namespaces:
+      - {{ .Release.Namespace }}
+    labelSelectors:
+      app.kubernetes.io/name: {{ include "kairoscloud-chart.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- end }}
+  duration: {{ .Values.chaosMesh.timeChaos.duration | default "30s" }}
+  timeOffset: {{ .Values.chaosMesh.timeChaos.timeOffset | default "1h" }}
+  {{- if .Values.chaosMesh.timeChaos.clockIds }}
+  clockIds:
+    {{- toYaml .Values.chaosMesh.timeChaos.clockIds | nindent 4 }}
+  {{- end }}
+  {{- if .Values.chaosMesh.timeChaos.containerNames }}
+  containerNames:
+    {{- toYaml .Values.chaosMesh.timeChaos.containerNames | nindent 4 }}
+  {{- end }}
+{{- end }}

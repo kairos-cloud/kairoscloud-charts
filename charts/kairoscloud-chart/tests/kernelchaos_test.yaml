@@ -1,0 +1,111 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: kernelchaos
+templates:
+  - chaos-mesh/kernelchaos.yaml
+tests:
+  - it: should create kernelchaos with basic configuration
+    set:
+      chaosMesh:
+        enabled: true
+        kernelChaos:
+          enabled: true
+          duration: "60s"
+          failKernRequest:
+            callchain:
+              - funcname: "should_failslab"
+            failtype: 0
+    asserts:
+      - isKind:
+          of: KernelChaos
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-kairoscloud-chart-kernel-chaos
+      - equal:
+          path: spec.duration
+          value: "60s"
+      - equal:
+          path: spec.failKernRequest.callchain[0].funcname
+          value: "should_failslab"
+      - equal:
+          path: spec.failKernRequest.failtype
+          value: 0
+
+  - it: should create kernelchaos with custom selector
+    set:
+      chaosMesh:
+        enabled: true
+        kernelChaos:
+          enabled: true
+          selector:
+            namespaces:
+              - custom-namespace
+            labelSelectors:
+              app: test-app
+    asserts:
+      - equal:
+          path: spec.selector.namespaces[0]
+          value: custom-namespace
+      - equal:
+          path: spec.selector.labelSelectors.app
+          value: test-app
+
+  - it: should create kernelchaos with complex callchain
+    set:
+      chaosMesh:
+        enabled: true
+        kernelChaos:
+          enabled: true
+          failKernRequest:
+            callchain:
+              - funcname: "should_failslab"
+                parameters: "1"
+              - funcname: "should_fail_alloc_page"
+                parameters: "2"
+            failtype: 1
+    asserts:
+      - equal:
+          path: spec.failKernRequest.callchain[0].funcname
+          value: "should_failslab"
+      - equal:
+          path: spec.failKernRequest.callchain[0].parameters
+          value: "1"
+      - equal:
+          path: spec.failKernRequest.callchain[1].funcname
+          value: "should_fail_alloc_page"
+      - equal:
+          path: spec.failKernRequest.callchain[1].parameters
+          value: "2"
+      - equal:
+          path: spec.failKernRequest.failtype
+          value: 1
+
+  - it: should create kernelchaos with annotations
+    set:
+      chaosMesh:
+        enabled: true
+        kernelChaos:
+          enabled: true
+          annotations:
+            test-annotation: "test-value"
+    asserts:
+      - equal:
+          path: metadata.annotations.test-annotation
+          value: "test-value"
+
+  - it: should not create kernelchaos when disabled
+    set:
+      chaosMesh:
+        enabled: true
+        kernelChaos:
+          enabled: false
+    asserts:
+      - isNull:
+          path: metadata.name
+
+  - it: should not create kernelchaos when chaosMesh disabled
+    set:
+      chaosMesh:
+        enabled: false
+    asserts:
+      - isNull:
+          path: metadata.name

@@ -1,0 +1,47 @@
+{{- if and .Values.chaosMesh.enabled .Values.chaosMesh.jvmChaos.enabled }}
+apiVersion: chaos-mesh.org/v1alpha1
+kind: JVMChaos
+metadata:
+  name: {{ include "kairoscloud-chart.fullname" . }}-jvm-chaos
+  labels:
+    {{- include "kairoscloud-chart.labels" . | nindent 4 }}
+  {{- with .Values.chaosMesh.jvmChaos.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  mode: {{ .Values.chaosMesh.jvmChaos.mode | default "one" }}
+  selector:
+    {{- if .Values.chaosMesh.jvmChaos.selector }}
+    {{- toYaml .Values.chaosMesh.jvmChaos.selector | nindent 4 }}
+    {{- else }}
+    namespaces:
+      - {{ .Release.Namespace }}
+    labelSelectors:
+      app.kubernetes.io/name: {{ include "kairoscloud-chart.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- end }}
+  duration: {{ .Values.chaosMesh.jvmChaos.duration | default "30s" }}
+  action: {{ .Values.chaosMesh.jvmChaos.action | default "latency" }}
+  {{- if .Values.chaosMesh.jvmChaos.target }}
+  target: {{ .Values.chaosMesh.jvmChaos.target }}
+  {{- end }}
+  {{- if .Values.chaosMesh.jvmChaos.class }}
+  class: {{ .Values.chaosMesh.jvmChaos.class }}
+  {{- end }}
+  {{- if .Values.chaosMesh.jvmChaos.method }}
+  method: {{ .Values.chaosMesh.jvmChaos.method }}
+  {{- end }}
+  {{- if .Values.chaosMesh.jvmChaos.latency }}
+  latency: {{ .Values.chaosMesh.jvmChaos.latency }}
+  {{- end }}
+  {{- if .Values.chaosMesh.jvmChaos.value }}
+  value: {{ .Values.chaosMesh.jvmChaos.value }}
+  {{- end }}
+  {{- if .Values.chaosMesh.jvmChaos.exception }}
+  exception: {{ .Values.chaosMesh.jvmChaos.exception }}
+  {{- end }}
+  {{- if .Values.chaosMesh.jvmChaos.ruleData }}
+  ruleData: {{ .Values.chaosMesh.jvmChaos.ruleData }}
+  {{- end }}
+{{- end }}

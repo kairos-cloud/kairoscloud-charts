@@ -518,3 +518,98 @@ keda:
   fallback: {}
     # failureThreshold: 3
     # replicas: 1
+
+# Chaos Mesh configuration for chaos engineering
+# When enabled, automatically installs Chaos Mesh as a dependency
+# and provides templates for various chaos experiments
+chaosMesh:
+  enabled: false
+  
+  # Chaos Mesh dependency configuration
+  # These values are passed to the Chaos Mesh subchart
+  # See: https://charts.chaos-mesh.org for full configuration options
+  chaos-mesh:
+    # Chaos Mesh controller configuration
+    controllerManager:
+      replicas: 1
+      # Enable webhook for admission control
+      webhook:
+        enabled: true
+    # Chaos Mesh daemon configuration  
+    chaosDaemon:
+      enabled: true
+    # Chaos Mesh dashboard configuration
+    dashboard:
+      enabled: true
+      # Enable ingress for dashboard access
+      ingress:
+        enabled: false
+    # Chaos Mesh DNS server configuration
+    dnsServer:
+      enabled: true
+    # Chaos Mesh chaosfs configuration
+    chaosfs:
+      enabled: true
+
+  # Example chaos experiments configuration
+  # These are example configurations for different chaos types
+  # Uncomment and modify as needed for your specific use cases
+  
+  # HTTPChaos example - HTTP request chaos
+  # httpChaos:
+  #   enabled: true
+  #   mode: "one"
+  #   duration: "30s"
+  #   action: "delay"
+  #   delay: "10s"
+  #   target: "Request"
+  #   method: "GET"
+  #   path: "/api"
+  #   selector:
+  #     namespaces:
+  #       - default
+  #     labelSelectors:
+  #       app: my-app
+
+  # PodChaos example - Pod failure chaos
+  # podChaos:
+  #   enabled: true
+  #   mode: "one"
+  #   duration: "60s"
+  #   action: "pod-failure"
+  #   selector:
+  #     namespaces:
+  #       - default
+  #     labelSelectors:
+  #       app: my-app
+
+  # NetworkChaos example - Network delay chaos
+  # networkChaos:
+  #   enabled: true
+  #   mode: "one"
+  #   duration: "30s"
+  #   action: "delay"
+  #   delay:
+  #     latency: "10ms"
+  #     correlation: "100"
+  #     jitter: "0ms"
+  #   selector:
+  #     namespaces:
+  #       - default
+  #     labelSelectors:
+  #       app: my-app
+
+  # StressChaos example - CPU stress chaos
+  # stressChaos:
+  #   enabled: true
+  #   mode: "one"
+  #   duration: "60s"
+  #   stressors:
+  #     cpu:
+  #       workers: 1
+  #       load: 50
+  #   selector:
+  #     namespaces:
+  #       - default
+  #     labelSelectors:
+  #       app: my-app

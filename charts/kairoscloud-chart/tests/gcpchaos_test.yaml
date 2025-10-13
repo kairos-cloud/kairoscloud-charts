@@ -1,0 +1,147 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: gcpchaos
+templates:
+  - chaos-mesh/gcpchaos.yaml
+tests:
+  - it: should create gcpchaos with basic configuration
+    set:
+      chaosMesh:
+        enabled: true
+        gcpChaos:
+          enabled: true
+          action: "node-stop"
+          project: "my-gcp-project"
+          zone: "us-central1-a"
+          instance: "gcp-instance-1"
+          duration: "60s"
+    asserts:
+      - isKind:
+          of: GCPChaos
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-kairoscloud-chart-gcp-chaos
+      - equal:
+          path: spec.action
+          value: "node-stop"
+      - equal:
+          path: spec.project
+          value: "my-gcp-project"
+      - equal:
+          path: spec.zone
+          value: "us-central1-a"
+      - equal:
+          path: spec.instance
+          value: "gcp-instance-1"
+      - equal:
+          path: spec.duration
+          value: "60s"
+
+  - it: should create gcpchaos with node-restart action
+    set:
+      chaosMesh:
+        enabled: true
+        gcpChaos:
+          enabled: true
+          action: "node-restart"
+          project: "my-gcp-project"
+          zone: "us-west1-b"
+          instance: "gcp-instance-2"
+    asserts:
+      - equal:
+          path: spec.action
+          value: "node-restart"
+      - equal:
+          path: spec.project
+          value: "my-gcp-project"
+      - equal:
+          path: spec.zone
+          value: "us-west1-b"
+      - equal:
+          path: spec.instance
+          value: "gcp-instance-2"
+
+  - it: should create gcpchaos with disk-loss action
+    set:
+      chaosMesh:
+        enabled: true
+        gcpChaos:
+          enabled: true
+          action: "disk-loss"
+          project: "my-gcp-project"
+          zone: "europe-west1-c"
+          instance: "gcp-instance-3"
+    asserts:
+      - equal:
+          path: spec.action
+          value: "disk-loss"
+      - equal:
+          path: spec.project
+          value: "my-gcp-project"
+      - equal:
+          path: spec.zone
+          value: "europe-west1-c"
+      - equal:
+          path: spec.instance
+          value: "gcp-instance-3"
+
+  - it: should create gcpchaos with custom selector
+    set:
+      chaosMesh:
+        enabled: true
+        gcpChaos:
+          enabled: true
+          selector:
+            namespaces:
+              - custom-namespace
+            labelSelectors:
+              app: test-app
+    asserts:
+      - equal:
+          path: spec.selector.namespaces[0]
+          value: custom-namespace
+      - equal:
+          path: spec.selector.labelSelectors.app
+          value: test-app
+
+  - it: should create gcpchaos with secret name
+    set:
+      chaosMesh:
+        enabled: true
+        gcpChaos:
+          enabled: true
+          secretName: "gcp-credentials"
+    asserts:
+      - equal:
+          path: spec.secretName
+          value: "gcp-credentials"
+
+  - it: should create gcpchaos with annotations
+    set:
+      chaosMesh:
+        enabled: true
+        gcpChaos:
+          enabled: true
+          annotations:
+            test-annotation: "test-value"
+    asserts:
+      - equal:
+          path: metadata.annotations.test-annotation
+          value: "test-value"
+
+  - it: should not create gcpchaos when disabled
+    set:
+      chaosMesh:
+        enabled: true
+        gcpChaos:
+          enabled: false
+    asserts:
+      - isNull:
+          path: metadata.name
+
+  - it: should not create gcpchaos when chaosMesh disabled
+    set:
+      chaosMesh:
+        enabled: false
+    asserts:
+      - isNull:
+          path: metadata.name

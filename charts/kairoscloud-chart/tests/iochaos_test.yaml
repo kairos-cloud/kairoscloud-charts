@@ -1,0 +1,154 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: iochaos
+templates:
+  - chaos-mesh/iochaos.yaml
+tests:
+  - it: should create iochaos with basic configuration
+    set:
+      chaosMesh:
+        enabled: true
+        ioChaos:
+          enabled: true
+          action: "latency"
+          delay: "10ms"
+          duration: "60s"
+    asserts:
+      - isKind:
+          of: IOChaos
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-kairoscloud-chart-io-chaos
+      - equal:
+          path: spec.action
+          value: "latency"
+      - equal:
+          path: spec.delay
+          value: "10ms"
+      - equal:
+          path: spec.duration
+          value: "60s"
+
+  - it: should create iochaos with error action
+    set:
+      chaosMesh:
+        enabled: true
+        ioChaos:
+          enabled: true
+          action: "errno"
+          errno: 5
+    asserts:
+      - equal:
+          path: spec.action
+          value: "errno"
+      - equal:
+          path: spec.errno
+          value: 5
+
+  - it: should create iochaos with custom selector
+    set:
+      chaosMesh:
+        enabled: true
+        ioChaos:
+          enabled: true
+          selector:
+            namespaces:
+              - custom-namespace
+            labelSelectors:
+              app: test-app
+    asserts:
+      - equal:
+          path: spec.selector.namespaces[0]
+          value: custom-namespace
+      - equal:
+          path: spec.selector.labelSelectors.app
+          value: test-app
+
+  - it: should create iochaos with specific methods and paths
+    set:
+      chaosMesh:
+        enabled: true
+        ioChaos:
+          enabled: true
+          methods:
+            - read
+            - write
+          paths:
+            - /tmp/test
+            - /var/log
+    asserts:
+      - equal:
+          path: spec.methods[0]
+          value: "read"
+      - equal:
+          path: spec.methods[1]
+          value: "write"
+      - equal:
+          path: spec.paths[0]
+          value: "/tmp/test"
+      - equal:
+          path: spec.paths[1]
+          value: "/var/log"
+
+  - it: should create iochaos with volume path
+    set:
+      chaosMesh:
+        enabled: true
+        ioChaos:
+          enabled: true
+          volumePath: "/mnt/data"
+          percent: 50
+    asserts:
+      - equal:
+          path: spec.volumePath
+          value: "/mnt/data"
+      - equal:
+          path: spec.percent
+          value: 50
+
+  - it: should create iochaos with attributes
+    set:
+      chaosMesh:
+        enabled: true
+        ioChaos:
+          enabled: true
+          attr:
+            perm: 0644
+            size: 1024
+    asserts:
+      - equal:
+          path: spec.attr.perm
+          value: 0644
+      - equal:
+          path: spec.attr.size
+          value: 1024
+
+  - it: should create iochaos with annotations
+    set:
+      chaosMesh:
+        enabled: true
+        ioChaos:
+          enabled: true
+          annotations:
+            test-annotation: "test-value"
+    asserts:
+      - equal:
+          path: metadata.annotations.test-annotation
+          value: "test-value"
+
+  - it: should not create iochaos when disabled
+    set:
+      chaosMesh:
+        enabled: true
+        ioChaos:
+          enabled: false
+    asserts:
+      - isNull:
+          path: metadata.name
+
+  - it: should not create iochaos when chaosMesh disabled
+    set:
+      chaosMesh:
+        enabled: false
+    asserts:
+      - isNull:
+          path: metadata.name

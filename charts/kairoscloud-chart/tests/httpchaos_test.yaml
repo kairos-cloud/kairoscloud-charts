@@ -1,0 +1,152 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: httpchaos
+templates:
+  - chaos-mesh/httpchaos.yaml
+tests:
+  - it: should create httpchaos with basic configuration
+    set:
+      chaosMesh:
+        enabled: true
+        httpChaos:
+          enabled: true
+          duration: "60s"
+          action: "delay"
+          delay: "10s"
+    asserts:
+      - isKind:
+          of: HTTPChaos
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-kairoscloud-chart-http-chaos
+      - equal:
+          path: spec.duration
+          value: "60s"
+      - equal:
+          path: spec.delay
+          value: "10s"
+
+  - it: should create httpchaos with custom selector
+    set:
+      chaosMesh:
+        enabled: true
+        httpChaos:
+          enabled: true
+          selector:
+            namespaces:
+              - custom-namespace
+            labelSelectors:
+              app: test-app
+    asserts:
+      - equal:
+          path: spec.selector.namespaces[0]
+          value: custom-namespace
+      - equal:
+          path: spec.selector.labelSelectors.app
+          value: test-app
+
+  - it: should create httpchaos with error response
+    set:
+      chaosMesh:
+        enabled: true
+        httpChaos:
+          enabled: true
+          abort: true
+          code: 500
+    asserts:
+      - equal:
+          path: spec.abort
+          value: true
+      - equal:
+          path: spec.code
+          value: 500
+
+  - it: should create httpchaos with replace action
+    set:
+      chaosMesh:
+        enabled: true
+        httpChaos:
+          enabled: true
+          action: "replace"
+          replace:
+            body: "error response"
+            code: 404
+    asserts:
+      - equal:
+          path: spec.replace.body
+          value: "error response"
+      - equal:
+          path: spec.replace.code
+          value: 404
+
+  - it: should create httpchaos with patch action
+    set:
+      chaosMesh:
+        enabled: true
+        httpChaos:
+          enabled: true
+          action: "patch"
+          patch:
+            type: "JSONPatch"
+            body: '[{"op": "replace", "path": "/data", "value": "patched"}]'
+    asserts:
+      - equal:
+          path: spec.patch.type
+          value: "JSONPatch"
+      - equal:
+          path: spec.patch.body
+          value: '[{"op": "replace", "path": "/data", "value": "patched"}]'
+
+  - it: should create httpchaos with specific target and method
+    set:
+      chaosMesh:
+        enabled: true
+        httpChaos:
+          enabled: true
+          target: "Request"
+          method: "GET"
+          path: "/api/v1/users"
+          port: 8080
+    asserts:
+      - equal:
+          path: spec.target
+          value: "Request"
+      - equal:
+          path: spec.method
+          value: "GET"
+      - equal:
+          path: spec.path
+          value: "/api/v1/users"
+      - equal:
+          path: spec.port
+          value: 8080
+
+  - it: should create httpchaos with annotations
+    set:
+      chaosMesh:
+        enabled: true
+        httpChaos:
+          enabled: true
+          annotations:
+            test-annotation: "test-value"
+    asserts:
+      - equal:
+          path: metadata.annotations.test-annotation
+          value: "test-value"
+
+  - it: should not create httpchaos when disabled
+    set:
+      chaosMesh:
+        enabled: true
+        httpChaos:
+          enabled: false
+    asserts:
+      - isNull:
+          path: metadata.name
+
+  - it: should not create httpchaos when chaosMesh disabled
+    set:
+      chaosMesh:
+        enabled: false
+    asserts:
+      - isNull:
+          path: metadata.name

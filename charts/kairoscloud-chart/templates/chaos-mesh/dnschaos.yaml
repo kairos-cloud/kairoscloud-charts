@@ -1,0 +1,34 @@
+{{- if and .Values.chaosMesh.enabled .Values.chaosMesh.dnsChaos.enabled }}
+apiVersion: chaos-mesh.org/v1alpha1
+kind: DNSChaos
+metadata:
+  name: {{ include "kairoscloud-chart.fullname" . }}-dns-chaos
+  labels:
+    {{- include "kairoscloud-chart.labels" . | nindent 4 }}
+  {{- with .Values.chaosMesh.dnsChaos.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  mode: {{ .Values.chaosMesh.dnsChaos.mode | default "one" }}
+  selector:
+    {{- if .Values.chaosMesh.dnsChaos.selector }}
+    {{- toYaml .Values.chaosMesh.dnsChaos.selector | nindent 4 }}
+    {{- else }}
+    namespaces:
+      - {{ .Release.Namespace }}
+    labelSelectors:
+      app.kubernetes.io/name: {{ include "kairoscloud-chart.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- end }}
+  duration: {{ .Values.chaosMesh.dnsChaos.duration | default "30s" }}
+  action: {{ .Values.chaosMesh.dnsChaos.action | default "error" }}
+  {{- if .Values.chaosMesh.dnsChaos.patterns }}
+  patterns:
+    {{- toYaml .Values.chaosMesh.dnsChaos.patterns | nindent 4 }}
+  {{- end }}
+  {{- if .Values.chaosMesh.dnsChaos.containerNames }}
+  containerNames:
+    {{- toYaml .Values.chaosMesh.dnsChaos.containerNames | nindent 4 }}
+  {{- end }}
+{{- end }}

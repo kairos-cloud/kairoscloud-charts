@@ -1,0 +1,38 @@
+{{- if and .Values.chaosMesh.enabled .Values.chaosMesh.gcpChaos.enabled }}
+apiVersion: chaos-mesh.org/v1alpha1
+kind: GCPChaos
+metadata:
+  name: {{ include "kairoscloud-chart.fullname" . }}-gcp-chaos
+  labels:
+    {{- include "kairoscloud-chart.labels" . | nindent 4 }}
+  {{- with .Values.chaosMesh.gcpChaos.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  mode: {{ .Values.chaosMesh.gcpChaos.mode | default "one" }}
+  selector:
+    {{- if .Values.chaosMesh.gcpChaos.selector }}
+    {{- toYaml .Values.chaosMesh.gcpChaos.selector | nindent 4 }}
+    {{- else }}
+    namespaces:
+      - {{ .Release.Namespace }}
+    labelSelectors:
+      app.kubernetes.io/name: {{ include "kairoscloud-chart.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- end }}
+  duration: {{ .Values.chaosMesh.gcpChaos.duration | default "30s" }}
+  action: {{ .Values.chaosMesh.gcpChaos.action | default "node-stop" }}
+  {{- if .Values.chaosMesh.gcpChaos.project }}
+  project: {{ .Values.chaosMesh.gcpChaos.project }}
+  {{- end }}
+  {{- if .Values.chaosMesh.gcpChaos.zone }}
+  zone: {{ .Values.chaosMesh.gcpChaos.zone }}
+  {{- end }}
+  {{- if .Values.chaosMesh.gcpChaos.instance }}
+  instance: {{ .Values.chaosMesh.gcpChaos.instance }}
+  {{- end }}
+  {{- if .Values.chaosMesh.gcpChaos.secretName }}
+  secretName: {{ .Values.chaosMesh.gcpChaos.secretName }}
+  {{- end }}
+{{- end }}
