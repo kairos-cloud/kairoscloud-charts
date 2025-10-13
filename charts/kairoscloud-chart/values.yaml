@@ -613,3 +613,125 @@ chaosMesh:
   #       - default
   #     labelSelectors:
   #       app: my-app
+
+  # Chaos Mesh Workflow configuration
+  # Orchestrate multiple chaos experiments in serial or parallel
+  # See: https://chaos-mesh.org/docs/create-chaos-mesh-workflow/
+  workflow:
+    enabled: false
+    annotations: {}
+    # Entry point of the workflow
+    entry: "entry"
+    # Workflow templates - each template represents a step in the workflow
+    templates: []
+      # Example: Parallel workflow with multiple chaos types
+      # - name: "entry"
+      #   type: "Parallel"
+      #   deadline: "240s"
+      #   children:
+      #     - "stress-chaos"
+      #     - "network-chaos"
+      #     - "pod-chaos"
+      # 
+      # - name: "stress-chaos"
+      #   type: "StressChaos"
+      #   deadline: "60s"
+      #   stressChaos:
+      #     mode: "one"
+      #     selector:
+      #       labelSelectors:
+      #         app: my-app
+      #     stressors:
+      #       cpu:
+      #         workers: 1
+      #         load: 50
+      # 
+      # - name: "network-chaos"
+      #   type: "NetworkChaos"
+      #   deadline: "30s"
+      #   networkChaos:
+      #     action: "delay"
+      #     mode: "one"
+      #     selector:
+      #       labelSelectors:
+      #         app: my-app
+      #     delay:
+      #       latency: "10ms"
+      #       correlation: "100"
+      #       jitter: "0ms"
+      # 
+      # - name: "pod-chaos"
+      #   type: "PodChaos"
+      #   deadline: "60s"
+      #   podChaos:
+      #     action: "pod-failure"
+      #     mode: "one"
+      #     selector:
+      #       labelSelectors:
+      #         app: my-app
+      # 
+      # Example: Serial workflow with conditional branches
+      # - name: "entry"
+      #   type: "Serial"
+      #   deadline: "300s"
+      #   children:
+      #     - "health-check"
+      #     - "conditional-chaos"
+      # 
+      # - name: "health-check"
+      #   type: "Task"
+      #   deadline: "30s"
+      #   task:
+      #     container:
+      #       name: "health-check"
+      #       image: "curlimages/curl:latest"
+      #       command: ["curl", "-f", "http://my-app:8080/health"]
+      #   conditionalBranches:
+      #     - target: "pod-chaos"
+      #       expression: "exitCode == 0"
+      #     - target: "skip-chaos"
+      #       expression: "exitCode != 0"
+      # 
+      # - name: "conditional-chaos"
+      #   type: "PodChaos"
+      #   deadline: "60s"
+      #   podChaos:
+      #     action: "pod-kill"
+      #     mode: "one"
+      #     selector:
+      #       labelSelectors:
+      #         app: my-app
+      # 
+      # - name: "skip-chaos"
+      #   type: "Suspend"
+      #   deadline: "10s"
+      # 
+      # Example: Scheduled chaos experiments
+      # - name: "entry"
+      #   type: "Schedule"
+      #   deadline: "120s"
+      #   schedule:
+      #     schedule: "@every 30s"
+      #     type: "PodChaos"
+      #     podChaos:
+      #       action: "pod-kill"
+      #       mode: "one"
+      #       selector:
+      #         labelSelectors:
+      #           app: my-app
+      # 
+      # Example: Status check with abort
+      # - name: "entry"
+      #   type: "StatusCheck"
+      #   deadline: "60s"
+      #   abortWithStatusCheck: true
+      #   statusCheck:
+      #     mode: "one"
+      #     selector:
+      #       labelSelectors:
+      #         app: my-app
+      #     type: "HTTP"
+      #     http:
+      #       url: "http://my-app:8080/health"
+      #       method: "GET"
+      #       expectedStatus: 200
