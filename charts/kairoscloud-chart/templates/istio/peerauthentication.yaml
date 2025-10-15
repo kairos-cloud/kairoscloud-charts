@@ -12,7 +12,14 @@ metadata:
 spec:
   {{- if .Values.istio.peerAuthentication.selector }}
   selector:
-    {{- toYaml .Values.istio.peerAuthentication.selector | nindent 4 }}
+    {{- if .Values.istio.peerAuthentication.selector.matchLabels }}
+    matchLabels:
+      {{- toYaml .Values.istio.peerAuthentication.selector.matchLabels | nindent 6 }}
+    {{- end }}
+    {{- if .Values.istio.peerAuthentication.selector.matchExpressions }}
+    matchExpressions:
+      {{- toYaml .Values.istio.peerAuthentication.selector.matchExpressions | nindent 6 }}
+    {{- end }}
   {{- else }}
   selector:
     matchLabels:
@@ -20,10 +27,17 @@ spec:
   {{- end }}
   {{- if .Values.istio.peerAuthentication.mtls }}
   mtls:
-    {{- toYaml .Values.istio.peerAuthentication.mtls | nindent 4 }}
+    {{- if .Values.istio.peerAuthentication.mtls.mode }}
+    mode: {{ .Values.istio.peerAuthentication.mtls.mode }}
+    {{- end }}
   {{- end }}
   {{- if .Values.istio.peerAuthentication.portLevelMtls }}
   portLevelMtls:
-    {{- toYaml .Values.istio.peerAuthentication.portLevelMtls | nindent 4 }}
+    {{- range $port, $config := .Values.istio.peerAuthentication.portLevelMtls }}
+    {{ $port | toString }}:
+      {{- if $config.mode }}
+      mode: {{ $config.mode }}
+      {{- end }}
+    {{- end }}
   {{- end }}
 {{- end }}

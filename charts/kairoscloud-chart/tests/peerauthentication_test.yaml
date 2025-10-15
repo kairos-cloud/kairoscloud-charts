@@ -12,7 +12,7 @@ tests:
           mtls:
             mode: PERMISSIVE
           portLevelMtls:
-            8080:
+            "8080":
               mode: DISABLE
     asserts:
       - isKind:
@@ -101,9 +101,9 @@ tests:
           mtls:
             mode: STRICT
           portLevelMtls:
-            8080:
+            "8080":
               mode: DISABLE
-            9090:
+            "9090":
               mode: PERMISSIVE
     asserts:
       - isKind:
