@@ -21,6 +21,23 @@ deployment:
   enabled: true
   replicaCount: 1
   
+  # Deployment strategy configuration
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+  
+  # Deployment lifecycle configuration
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
+  
+  # Init containers
+  initContainers: []
+    # - name: init-container
+    #   image: busybox:1.35
+    #   command: ['sh', '-c', 'echo "Init container running"']
+  
   image:
     repository: nginx
     pullPolicy: IfNotPresent
@@ -114,6 +131,20 @@ service:
   port: 80
   targetPort: 8080
   annotations: {}
+  
+  # Service session affinity
+  sessionAffinity: None
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800
+  
+  # LoadBalancer and NodePort specific settings
+  externalTrafficPolicy: Cluster
+  loadBalancerSourceRanges: []
+  
+  # IP family configuration
+  ipFamily: IPv4
+  ipFamilyPolicy: SingleStack
 
 # Ingress configuration
 ingress:
@@ -346,6 +377,24 @@ persistence:
   size: 8Gi
   annotations: {}
 
+# StorageClass configuration for dynamic volume provisioning
+storageClass:
+  enabled: false
+  annotations: {}
+  provisioner: kubernetes.io/no-provisioner
+  parameters: {}
+    # type: ssd
+    # zone: us-west1-a
+  reclaimPolicy: Delete
+  allowVolumeExpansion: false
+  volumeBindingMode: Immediate
+  allowedTopologies: []
+    # - matchLabelExpressions:
+    #     - key: topology.kubernetes.io/zone
+    #       values:
+    #         - us-west1-a
+    #         - us-west1-b
+
 # ConfigMap configuration
 configMap:
   enabled: true
@@ -422,6 +471,32 @@ serviceMonitor:
   basicAuth: {}
   namespaceSelector: {}
   sampleLimit: 0
+
+# PrometheusRule configuration for alerting
+prometheusRule:
+  enabled: false
+  labels: {}
+  annotations: {}
+  groups: []
+    # - name: kairoscloud.rules
+    #   interval: 30s
+    #   rules:
+    #     - alert: KairosCloudDown
+    #       expr: up{job="kairoscloud"} == 0
+    #       for: 1m
+    #       labels:
+    #         severity: critical
+    #       annotations:
+    #         summary: "KairosCloud instance is down"
+    #         description: "KairosCloud instance {{ $labels.instance }} has been down for more than 1 minute."
+    #     - alert: HighMemoryUsage
+    #       expr: (container_memory_usage_bytes{name="kairoscloud"} / container_spec_memory_limit_bytes) * 100 > 80
+    #       for: 5m
+    #       labels:
+    #         severity: warning
+    #       annotations:
+    #         summary: "High memory usage detected"
+    #         description: "Memory usage is above 80% for more than 5 minutes."
 
 # Certificate configuration (cert-manager)
 certificate:

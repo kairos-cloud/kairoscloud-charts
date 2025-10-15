@@ -9,6 +9,16 @@ spec:
   {{- if and (not .Values.autoscaling.enabled) (not .Values.keda.enabled) }}
   replicas: {{ .Values.deployment.replicaCount }}
   {{- end }}
+  {{- if .Values.deployment.strategy }}
+  strategy:
+    {{- toYaml .Values.deployment.strategy | nindent 4 }}
+  {{- end }}
+  {{- if .Values.deployment.revisionHistoryLimit }}
+  revisionHistoryLimit: {{ .Values.deployment.revisionHistoryLimit }}
+  {{- end }}
+  {{- if .Values.deployment.progressDeadlineSeconds }}
+  progressDeadlineSeconds: {{ .Values.deployment.progressDeadlineSeconds }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "kairoscloud-chart.selectorLabels" . | nindent 6 }}

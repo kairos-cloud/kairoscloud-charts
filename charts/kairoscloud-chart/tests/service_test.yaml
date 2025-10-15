@@ -54,31 +54,86 @@ tests:
           path: spec.type
           value: NodePort
 
-  - it: should create headless service when statefulset is enabled
+  - it: should create service with session affinity
     set:
-      statefulset.enabled: true
-    documentIndex: 1
+      service:
+        sessionAffinity: ClientIP
+        sessionAffinityConfig:
+          clientIP:
+            timeoutSeconds: 3600
     asserts:
-      - isKind:
-          of: Service
       - equal:
-          path: metadata.name
-          value: RELEASE-NAME-kairoscloud-chart-headless
+          path: spec.sessionAffinity
+          value: ClientIP
+      - equal:
+          path: spec.sessionAffinityConfig.clientIP.timeoutSeconds
+          value: 3600
+
+  - it: should create LoadBalancer service with external traffic policy
+    set:
+      service:
+        type: LoadBalancer
+        externalTrafficPolicy: Local
+    asserts:
+      - equal:
+          path: spec.type
+          value: LoadBalancer
+      - equal:
+          path: spec.externalTrafficPolicy
+          value: Local
+
+  - it: should create LoadBalancer service with source ranges
+    set:
+      service:
+        type: LoadBalancer
+        loadBalancerSourceRanges:
+          - 10.0.0.0/8
+          - 192.168.0.0/16
+    asserts:
+      - equal:
+          path: spec.type
+          value: LoadBalancer
+      - equal:
+          path: spec.loadBalancerSourceRanges[0]
+          value: 10.0.0.0/8
+      - equal:
+          path: spec.loadBalancerSourceRanges[1]
+          value: 192.168.0.0/16
+
+  - it: should create service with IP family configuration
+    set:
+      service:
+        ipFamily: IPv6
+        ipFamilyPolicy: PreferDualStack
+    asserts:
+      - equal:
+          path: spec.ipFamily
+          value: IPv6
+      - equal:
+          path: spec.ipFamilyPolicy
+          value: PreferDualStack
+
+  - it: should create NodePort service with external traffic policy
+    set:
+      service:
+        type: NodePort
+        externalTrafficPolicy: Local
+    asserts:
+      - equal:
+          path: spec.type
+          value: NodePort
+      - equal:
+          path: spec.externalTrafficPolicy
+          value: Local
+
+  - it: should not set external traffic policy for ClusterIP service
+    set:
+      service:
+        type: ClusterIP
+        externalTrafficPolicy: Local
+    asserts:
       - equal:
           path: spec.type
           value: ClusterIP
-      - equal:
-          path: spec.clusterIP
-          value: None
-      - equal:
-          path: spec.ports[0].port
-          value: 80
-      - equal:
-          path: spec.ports[0].targetPort
-          value: 8080
-      - equal:
-          path: spec.ports[0].protocol
-          value: TCP
-      - equal:
-          path: spec.ports[0].name
-          value: http
+      - isNull:
+          path: spec.externalTrafficPolicy

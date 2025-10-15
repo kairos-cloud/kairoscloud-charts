@@ -192,3 +192,104 @@ tests:
       - equal:
           path: spec.template.spec.serviceAccountName
           value: custom-service-account
+
+  - it: should create deployment with rolling update strategy
+    set:
+      deployment:
+        strategy:
+          type: RollingUpdate
+          rollingUpdate:
+            maxSurge: 50%
+            maxUnavailable: 50%
+    asserts:
+      - equal:
+          path: spec.strategy.type
+          value: RollingUpdate
+      - equal:
+          path: spec.strategy.rollingUpdate.maxSurge
+          value: 50%
+      - equal:
+          path: spec.strategy.rollingUpdate.maxUnavailable
+          value: 50%
+
+  - it: should create deployment with recreate strategy
+    set:
+      deployment:
+        strategy:
+          type: Recreate
+    asserts:
+      - equal:
+          path: spec.strategy.type
+          value: Recreate
+
+  - it: should create deployment with revision history limit
+    set:
+      deployment:
+        revisionHistoryLimit: 5
+    asserts:
+      - equal:
+          path: spec.revisionHistoryLimit
+          value: 5
+
+  - it: should create deployment with progress deadline
+    set:
+      deployment:
+        progressDeadlineSeconds: 300
+    asserts:
+      - equal:
+          path: spec.progressDeadlineSeconds
+          value: 300
+
+  - it: should create deployment with init containers
+    set:
+      deployment:
+        initContainers:
+          - name: init-container-1
+            image: busybox:1.35
+            command: ['sh', '-c', 'echo "Init container 1"']
+          - name: init-container-2
+            image: alpine:3.18
+            command: ['sh', '-c', 'echo "Init container 2"']
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: init-container-1
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: busybox:1.35
+      - equal:
+          path: spec.template.spec.initContainers[0].command[0]
+          value: sh
+      - equal:
+          path: spec.template.spec.initContainers[1].name
+          value: init-container-2
+      - equal:
+          path: spec.template.spec.initContainers[1].image
+          value: alpine:3.18
+
+  - it: should create deployment with complete strategy configuration
+    set:
+      deployment:
+        strategy:
+          type: RollingUpdate
+          rollingUpdate:
+            maxSurge: 1
+            maxUnavailable: 0
+        revisionHistoryLimit: 3
+        progressDeadlineSeconds: 120
+    asserts:
+      - equal:
+          path: spec.strategy.type
+          value: RollingUpdate
+      - equal:
+          path: spec.strategy.rollingUpdate.maxSurge
+          value: 1
+      - equal:
+          path: spec.strategy.rollingUpdate.maxUnavailable
+          value: 0
+      - equal:
+          path: spec.revisionHistoryLimit
+          value: 3
+      - equal:
+          path: spec.progressDeadlineSeconds
+          value: 120

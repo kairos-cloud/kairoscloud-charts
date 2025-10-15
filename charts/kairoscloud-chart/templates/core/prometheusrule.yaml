@@ -1,0 +1,43 @@
+{{- if .Values.prometheusRule.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "kairoscloud-chart.fullname" . }}-rules
+  labels:
+    {{- include "kairoscloud-chart.labels" . | nindent 4 }}
+    {{- with .Values.prometheusRule.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.prometheusRule.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  groups:
+    {{- range .Values.prometheusRule.groups }}
+    - name: {{ .name }}
+      {{- if .interval }}
+      interval: {{ .interval }}
+      {{- end }}
+      {{- if .rules }}
+      rules:
+        {{- range .rules }}
+        - alert: {{ .alert }}
+          {{- if .expr }}
+          expr: {{ .expr }}
+          {{- end }}
+          {{- if .for }}
+          for: {{ .for }}
+          {{- end }}
+          {{- if .labels }}
+          labels:
+            {{- toYaml .labels | nindent 12 }}
+          {{- end }}
+          {{- if .annotations }}
+          annotations:
+            {{- toYaml .annotations | nindent 12 }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+{{- end }}

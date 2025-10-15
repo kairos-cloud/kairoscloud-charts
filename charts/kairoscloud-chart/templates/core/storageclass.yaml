@@ -1,0 +1,30 @@
+{{- if .Values.storageClass.enabled }}
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: {{ include "kairoscloud-chart.fullname" . }}-storage
+  labels:
+    {{- include "kairoscloud-chart.labels" . | nindent 4 }}
+  {{- with .Values.storageClass.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+provisioner: {{ .Values.storageClass.provisioner }}
+{{- if .Values.storageClass.parameters }}
+parameters:
+  {{- toYaml .Values.storageClass.parameters | nindent 2 }}
+{{- end }}
+{{- if .Values.storageClass.reclaimPolicy }}
+reclaimPolicy: {{ .Values.storageClass.reclaimPolicy }}
+{{- end }}
+{{- if .Values.storageClass.allowVolumeExpansion }}
+allowVolumeExpansion: {{ .Values.storageClass.allowVolumeExpansion }}
+{{- end }}
+{{- if .Values.storageClass.volumeBindingMode }}
+volumeBindingMode: {{ .Values.storageClass.volumeBindingMode }}
+{{- end }}
+{{- if .Values.storageClass.allowedTopologies }}
+allowedTopologies:
+  {{- toYaml .Values.storageClass.allowedTopologies | nindent 2 }}
+{{- end }}
+{{- end }}
