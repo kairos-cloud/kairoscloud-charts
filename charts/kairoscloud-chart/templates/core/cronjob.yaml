@@ -23,7 +23,7 @@ spec:
   {{- if .Values.cronJob.successfulJobsHistoryLimit }}
   successfulJobsHistoryLimit: {{ .Values.cronJob.successfulJobsHistoryLimit }}
   {{- end }}
-  {{- if .Values.cronJob.suspend }}
+  {{- if or .Values.cronJob.suspend (eq .Values.cronJob.suspend false) }}
   suspend: {{ .Values.cronJob.suspend }}
   {{- end }}
   jobTemplate:

@@ -1,0 +1,189 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: limitrange
+templates:
+  - core/limitrange.yaml
+tests:
+  - it: should not create limitrange when disabled
+    set:
+      limitRange:
+        enabled: false
+    asserts:
+      - isNull:
+          path: metadata
+
+  - it: should create limitrange with default values
+    set:
+      limitRange:
+        enabled: true
+        limits: []
+    asserts:
+      - isKind:
+          of: LimitRange
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-kairoscloud-chart-limits
+      - isAPIVersion:
+          of: v1
+
+  - it: should create limitrange with container limits
+    set:
+      limitRange:
+        enabled: true
+        limits:
+          - type: Container
+            max:
+              cpu: 2
+              memory: 4Gi
+            min:
+              cpu: 100m
+              memory: 128Mi
+            default:
+              cpu: 500m
+              memory: 512Mi
+            defaultRequest:
+              cpu: 200m
+              memory: 256Mi
+    asserts:
+      - isKind:
+          of: LimitRange
+      - equal:
+          path: spec.limits[0].type
+          value: Container
+      - equal:
+          path: spec.limits[0].max.cpu
+          value: 2
+      - equal:
+          path: spec.limits[0].max.memory
+          value: 4Gi
+      - equal:
+          path: spec.limits[0].min.cpu
+          value: 100m
+      - equal:
+          path: spec.limits[0].min.memory
+          value: 128Mi
+      - equal:
+          path: spec.limits[0].default.cpu
+          value: 500m
+      - equal:
+          path: spec.limits[0].default.memory
+          value: 512Mi
+      - equal:
+          path: spec.limits[0].defaultRequest.cpu
+          value: 200m
+      - equal:
+          path: spec.limits[0].defaultRequest.memory
+          value: 256Mi
+
+  - it: should create limitrange with pod limits
+    set:
+      limitRange:
+        enabled: true
+        limits:
+          - type: Pod
+            max:
+              cpu: 4
+              memory: 8Gi
+            min:
+              cpu: 200m
+              memory: 256Mi
+    asserts:
+      - isKind:
+          of: LimitRange
+      - equal:
+          path: spec.limits[0].type
+          value: Pod
+      - equal:
+          path: spec.limits[0].max.cpu
+          value: 4
+      - equal:
+          path: spec.limits[0].max.memory
+          value: 8Gi
+      - equal:
+          path: spec.limits[0].min.cpu
+          value: 200m
+      - equal:
+          path: spec.limits[0].min.memory
+          value: 256Mi
+
+  - it: should create limitrange with persistent volume claim limits
+    set:
+      limitRange:
+        enabled: true
+        limits:
+          - type: PersistentVolumeClaim
+            max:
+              storage: 10Gi
+            min:
+              storage: 1Gi
+    asserts:
+      - isKind:
+          of: LimitRange
+      - equal:
+          path: spec.limits[0].type
+          value: PersistentVolumeClaim
+      - equal:
+          path: spec.limits[0].max.storage
+          value: 10Gi
+      - equal:
+          path: spec.limits[0].min.storage
+          value: 1Gi
+
+  - it: should create limitrange with multiple limits
+    set:
+      limitRange:
+        enabled: true
+        limits:
+          - type: Container
+            max:
+              cpu: 1
+              memory: 2Gi
+          - type: Pod
+            max:
+              cpu: 2
+              memory: 4Gi
+          - type: PersistentVolumeClaim
+            max:
+              storage: 5Gi
+    asserts:
+      - isKind:
+          of: LimitRange
+      - equal:
+          path: spec.limits[0].type
+          value: Container
+      - equal:
+          path: spec.limits[1].type
+          value: Pod
+      - equal:
+          path: spec.limits[2].type
+          value: PersistentVolumeClaim
+
+  - it: should create limitrange with annotations
+    set:
+      limitRange:
+        enabled: true
+        annotations:
+          description: "Resource limits for the namespace"
+          contact: "admin@example.com"
+        limits: []
+    asserts:
+      - isKind:
+          of: LimitRange
+      - equal:
+          path: metadata.annotations.description
+          value: "Resource limits for the namespace"
+      - equal:
+          path: metadata.annotations.contact
+          value: "admin@example.com"
+
+  - it: should create limitrange with custom name
+    set:
+      fullnameOverride: "custom-app"
+      limitRange:
+        enabled: true
+        limits: []
+    asserts:
+      - isKind:
+          of: LimitRange
+      - equal:
+          path: metadata.name
+          value: custom-app-limits
