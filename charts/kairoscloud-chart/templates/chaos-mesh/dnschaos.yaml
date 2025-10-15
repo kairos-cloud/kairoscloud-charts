@@ -1,4 +1,4 @@
-{{- if and .Values.chaosMesh.enabled .Values.chaosMesh.dnsChaos.enabled }}
+{{- if and .Values.chaosMesh.enabled (and .Values.chaosMesh.dnsChaos .Values.chaosMesh.dnsChaos.enabled) }}
 apiVersion: chaos-mesh.org/v1alpha1
 kind: DNSChaos
 metadata:

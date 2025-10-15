@@ -1,4 +1,4 @@
-{{- if and .Values.chaosMesh.enabled .Values.chaosMesh.jvmChaos.enabled }}
+{{- if and .Values.chaosMesh.enabled (and .Values.chaosMesh.jvmChaos .Values.chaosMesh.jvmChaos.enabled) }}
 apiVersion: chaos-mesh.org/v1alpha1
 kind: JVMChaos
 metadata:

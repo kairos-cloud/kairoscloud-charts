@@ -1,4 +1,4 @@
-{{- if and .Values.chaosMesh.enabled .Values.chaosMesh.httpChaos.enabled }}
+{{- if and .Values.chaosMesh.enabled (and .Values.chaosMesh.httpChaos .Values.chaosMesh.httpChaos.enabled) }}
 apiVersion: chaos-mesh.org/v1alpha1
 kind: HTTPChaos
 metadata:

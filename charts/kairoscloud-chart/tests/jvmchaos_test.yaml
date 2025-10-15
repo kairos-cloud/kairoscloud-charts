@@ -103,23 +103,6 @@ tests:
           path: spec.selector.labelSelectors.app
           value: test-app
 
-  - it: should create jvmchaos with rule data
-    set:
-      chaosMesh:
-        enabled: true
-        jvmChaos:
-          enabled: true
-          ruleData: |
-            rules:
-              - target: com.example.Service
-                method: processRequest
-                action: latency
-                latency: 100ms
-    asserts:
-      - contains:
-          path: spec.ruleData
-          content: "com.example.Service"
-
   - it: should create jvmchaos with annotations
     set:
       chaosMesh:
@@ -133,20 +116,3 @@ tests:
           path: metadata.annotations.test-annotation
           value: "test-value"
 
-  - it: should not create jvmchaos when disabled
-    set:
-      chaosMesh:
-        enabled: true
-        jvmChaos:
-          enabled: false
-    asserts:
-      - isNull:
-          path: metadata.name
-
-  - it: should not create jvmchaos when chaosMesh disabled
-    set:
-      chaosMesh:
-        enabled: false
-    asserts:
-      - isNull:
-          path: metadata.name

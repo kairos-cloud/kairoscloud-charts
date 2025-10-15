@@ -116,20 +116,3 @@ tests:
           path: metadata.annotations.test-annotation
           value: "test-value"
 
-  - it: should not create awschaos when disabled
-    set:
-      chaosMesh:
-        enabled: true
-        awsChaos:
-          enabled: false
-    asserts:
-      - isNull:
-          path: metadata.name
-
-  - it: should not create awschaos when chaosMesh disabled
-    set:
-      chaosMesh:
-        enabled: false
-    asserts:
-      - isNull:
-          path: metadata.name

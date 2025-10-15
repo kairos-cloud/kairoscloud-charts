@@ -1,4 +1,4 @@
-{{- if and .Values.chaosMesh.enabled .Values.chaosMesh.networkChaos.enabled }}
+{{- if and .Values.chaosMesh.enabled (and .Values.chaosMesh.networkChaos .Values.chaosMesh.networkChaos.enabled) }}
 apiVersion: chaos-mesh.org/v1alpha1
 kind: NetworkChaos
 metadata:

@@ -1,4 +1,4 @@
-{{- if and .Values.chaosMesh.enabled .Values.chaosMesh.workflow.enabled }}
+{{- if and .Values.chaosMesh.enabled (and .Values.chaosMesh.workflow .Values.chaosMesh.workflow.enabled) }}
 apiVersion: chaos-mesh.org/v1alpha1
 kind: Workflow
 metadata:

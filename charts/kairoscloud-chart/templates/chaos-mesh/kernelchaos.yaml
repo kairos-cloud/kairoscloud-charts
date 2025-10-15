@@ -1,4 +1,4 @@
-{{- if and .Values.chaosMesh.enabled .Values.chaosMesh.kernelChaos.enabled }}
+{{- if and .Values.chaosMesh.enabled (and .Values.chaosMesh.kernelChaos .Values.chaosMesh.kernelChaos.enabled) }}
 apiVersion: chaos-mesh.org/v1alpha1
 kind: KernelChaos
 metadata:

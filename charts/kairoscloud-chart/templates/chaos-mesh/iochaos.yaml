@@ -1,4 +1,4 @@
-{{- if and .Values.chaosMesh.enabled .Values.chaosMesh.ioChaos.enabled }}
+{{- if and .Values.chaosMesh.enabled (and .Values.chaosMesh.ioChaos .Values.chaosMesh.ioChaos.enabled) }}
 apiVersion: chaos-mesh.org/v1alpha1
 kind: IOChaos
 metadata:

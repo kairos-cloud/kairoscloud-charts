@@ -1,4 +1,4 @@
-{{- if and .Values.chaosMesh.enabled .Values.chaosMesh.timeChaos.enabled }}
+{{- if and .Values.chaosMesh.enabled (and .Values.chaosMesh.timeChaos .Values.chaosMesh.timeChaos.enabled) }}
 apiVersion: chaos-mesh.org/v1alpha1
 kind: TimeChaos
 metadata:

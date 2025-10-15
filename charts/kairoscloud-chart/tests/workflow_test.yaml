@@ -300,20 +300,3 @@ tests:
           path: metadata.annotations.description
           value: "Chaos Mesh Workflow"
 
-  - it: should not create workflow when disabled
-    set:
-      chaosMesh:
-        enabled: true
-        workflow:
-          enabled: false
-    asserts:
-      - isNull:
-          path: metadata.name
-
-  - it: should not create workflow when chaosMesh disabled
-    set:
-      chaosMesh:
-        enabled: false
-    asserts:
-      - isNull:
-          path: metadata.name

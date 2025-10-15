@@ -1,4 +1,4 @@
-{{- if and .Values.chaosMesh.enabled .Values.chaosMesh.awsChaos.enabled }}
+{{- if and .Values.chaosMesh.enabled (and .Values.chaosMesh.awsChaos .Values.chaosMesh.awsChaos.enabled) }}
 apiVersion: chaos-mesh.org/v1alpha1
 kind: AWSChaos
 metadata:

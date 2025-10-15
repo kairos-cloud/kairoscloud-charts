@@ -1,4 +1,4 @@
-{{- if and .Values.chaosMesh.enabled .Values.chaosMesh.stressChaos.enabled }}
+{{- if and .Values.chaosMesh.enabled (and .Values.chaosMesh.stressChaos .Values.chaosMesh.stressChaos.enabled) }}
 apiVersion: chaos-mesh.org/v1alpha1
 kind: StressChaos
 metadata:

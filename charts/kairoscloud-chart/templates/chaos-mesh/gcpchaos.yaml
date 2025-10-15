@@ -1,4 +1,4 @@
-{{- if and .Values.chaosMesh.enabled .Values.chaosMesh.gcpChaos.enabled }}
+{{- if and .Values.chaosMesh.enabled (and .Values.chaosMesh.gcpChaos .Values.chaosMesh.gcpChaos.enabled) }}
 apiVersion: chaos-mesh.org/v1alpha1
 kind: GCPChaos
 metadata:

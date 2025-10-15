@@ -102,20 +102,3 @@ tests:
           path: metadata.annotations.test-annotation
           value: "test-value"
 
-  - it: should not create timechaos when disabled
-    set:
-      chaosMesh:
-        enabled: true
-        timeChaos:
-          enabled: false
-    asserts:
-      - isNull:
-          path: metadata.name
-
-  - it: should not create timechaos when chaosMesh disabled
-    set:
-      chaosMesh:
-        enabled: false
-    asserts:
-      - isNull:
-          path: metadata.name

@@ -13,8 +13,3 @@ sources:
 maintainers:
   - name: KairosCloud Team
     email: team@kairoscloud.com
-dependencies:
-  - name: chaos-mesh
-    version: "2.7.2"
-    repository: "https://charts.chaos-mesh.org"
-    condition: chaosMesh.enabled
