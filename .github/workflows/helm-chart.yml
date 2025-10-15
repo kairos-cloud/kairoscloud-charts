@@ -30,6 +30,11 @@ jobs:
         run: |
           helm plugin install https://github.com/helm-unittest/helm-unittest.git
 
+      - name: Helm information
+        run: |
+          helm version
+          helm plugin list
+
       - name: Run Helm Lint
         run: |
           for chart in charts/*/; do
