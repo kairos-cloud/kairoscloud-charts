@@ -1,4 +1,4 @@
-{{- if and .Values.deployment.enabled (not .Values.statefulset.enabled) }}
+{{- if .Values.deployment.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -28,6 +28,10 @@ spec:
       serviceAccountName: {{ include "kairoscloud-chart.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.deployment.podSecurityContext | nindent 8 }}
+      {{- if .Values.deployment.initContainers }}
+      initContainers:
+        {{- toYaml .Values.deployment.initContainers | nindent 8 }}
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:

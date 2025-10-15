@@ -5,6 +5,8 @@ templates:
 tests:
   - it: should create statefulset with basic configuration
     set:
+      deployment:
+        enabled: false
       statefulset:
         enabled: true
         serviceName: "my-service"
@@ -40,6 +42,8 @@ tests:
 
   - it: should create statefulset with default service name
     set:
+      deployment:
+        enabled: false
       statefulset:
         enabled: true
         serviceName: ""
@@ -52,6 +56,8 @@ tests:
 
   - it: should create statefulset with persistence enabled
     set:
+      deployment:
+        enabled: false
       statefulset:
         enabled: true
       persistence:
@@ -80,6 +86,8 @@ tests:
 
   - it: should create statefulset with extra volumes and volume mounts
     set:
+      deployment:
+        enabled: false
       statefulset:
         enabled: true
         extraVolumes:
@@ -107,6 +115,8 @@ tests:
 
   - it: should create statefulset with environment variables
     set:
+      deployment:
+        enabled: false
       statefulset:
         enabled: true
         env:
@@ -132,6 +142,8 @@ tests:
 
   - it: should create statefulset with probes enabled
     set:
+      deployment:
+        enabled: false
       statefulset:
         enabled: true
         livenessProbe:
@@ -170,6 +182,8 @@ tests:
 
   - it: should create statefulset with node selector and affinity
     set:
+      deployment:
+        enabled: false
       statefulset:
         enabled: true
       nodeSelector:
@@ -192,6 +206,8 @@ tests:
 
   - it: should create statefulset with tolerations
     set:
+      deployment:
+        enabled: false
       statefulset:
         enabled: true
         tolerations:
@@ -228,6 +244,8 @@ tests:
 
   - it: should create statefulset with image pull secrets
     set:
+      deployment:
+        enabled: false
       statefulset:
         enabled: true
         imagePullSecrets:
@@ -245,6 +263,8 @@ tests:
 
   - it: should create statefulset with pod annotations
     set:
+      deployment:
+        enabled: false
       statefulset:
         enabled: true
       podAnnotations:

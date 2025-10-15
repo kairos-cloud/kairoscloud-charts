@@ -1,0 +1,71 @@
+{{- if .Values.mutatingWebhookConfiguration.enabled }}
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: {{ include "kairoscloud-chart.fullname" . }}-mutating-webhook
+  labels:
+    {{- include "kairoscloud-chart.labels" . | nindent 4 }}
+  {{- with .Values.mutatingWebhookConfiguration.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+webhooks:
+  {{- range .Values.mutatingWebhookConfiguration.webhooks }}
+  - name: {{ .name }}
+    {{- if .clientConfig }}
+    clientConfig:
+      {{- if .clientConfig.url }}
+      url: {{ .clientConfig.url }}
+      {{- end }}
+      {{- if .clientConfig.service }}
+      service:
+        {{- if .clientConfig.service.name }}
+        name: {{ .clientConfig.service.name }}
+        {{- end }}
+        {{- if .clientConfig.service.namespace }}
+        namespace: {{ .clientConfig.service.namespace }}
+        {{- end }}
+        {{- if .clientConfig.service.path }}
+        path: {{ .clientConfig.service.path }}
+        {{- end }}
+        {{- if .clientConfig.service.port }}
+        port: {{ .clientConfig.service.port }}
+        {{- end }}
+      {{- end }}
+      {{- if .clientConfig.caBundle }}
+      caBundle: {{ .clientConfig.caBundle }}
+      {{- end }}
+    {{- end }}
+    {{- if .rules }}
+    rules:
+      {{- toYaml .rules | nindent 6 }}
+    {{- end }}
+    {{- if .failurePolicy }}
+    failurePolicy: {{ .failurePolicy }}
+    {{- end }}
+    {{- if .matchPolicy }}
+    matchPolicy: {{ .matchPolicy }}
+    {{- end }}
+    {{- if .namespaceSelector }}
+    namespaceSelector:
+      {{- toYaml .namespaceSelector | nindent 6 }}
+    {{- end }}
+    {{- if .objectSelector }}
+    objectSelector:
+      {{- toYaml .objectSelector | nindent 6 }}
+    {{- end }}
+    {{- if .sideEffects }}
+    sideEffects: {{ .sideEffects }}
+    {{- end }}
+    {{- if .timeoutSeconds }}
+    timeoutSeconds: {{ .timeoutSeconds }}
+    {{- end }}
+    {{- if .admissionReviewVersions }}
+    admissionReviewVersions:
+      {{- toYaml .admissionReviewVersions | nindent 6 }}
+    {{- end }}
+    {{- if .reinvocationPolicy }}
+    reinvocationPolicy: {{ .reinvocationPolicy }}
+    {{- end }}
+  {{- end }}
+{{- end }}

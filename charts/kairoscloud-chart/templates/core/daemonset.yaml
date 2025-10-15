@@ -1,0 +1,84 @@
+{{- if .Values.daemonset.enabled }}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "kairoscloud-chart.fullname" . }}
+  labels:
+    {{- include "kairoscloud-chart.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "kairoscloud-chart.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.daemonset.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "kairoscloud-chart.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.daemonset.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "kairoscloud-chart.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.daemonset.podSecurityContext | nindent 8 }}
+      {{- if .Values.daemonset.initContainers }}
+      initContainers:
+        {{- toYaml .Values.daemonset.initContainers | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.daemonset.securityContext | nindent 12 }}
+          image: "{{ .Values.daemonset.image.repository }}:{{ .Values.daemonset.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.daemonset.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.targetPort }}
+              protocol: TCP
+          {{- if .Values.daemonset.livenessProbe.enabled }}
+          livenessProbe:
+            {{- toYaml .Values.daemonset.livenessProbe | nindent 12 }}
+          {{- end }}
+          {{- if .Values.daemonset.readinessProbe.enabled }}
+          readinessProbe:
+            {{- toYaml .Values.daemonset.readinessProbe | nindent 12 }}
+          {{- end }}
+          {{- if .Values.daemonset.startupProbe.enabled }}
+          startupProbe:
+            {{- toYaml .Values.daemonset.startupProbe | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.daemonset.resources | nindent 12 }}
+          {{- if .Values.daemonset.env }}
+          env:
+            {{- toYaml .Values.daemonset.env | nindent 12 }}
+          {{- end }}
+          {{- if .Values.daemonset.extraVolumeMounts }}
+          volumeMounts:
+            {{- toYaml .Values.daemonset.extraVolumeMounts | nindent 12 }}
+          {{- end }}
+      {{- if .Values.daemonset.extraVolumes }}
+      volumes:
+        {{- toYaml .Values.daemonset.extraVolumes | nindent 8 }}
+      {{- end }}
+      {{- with .Values.daemonset.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.daemonset.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.daemonset.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  {{- if .Values.daemonset.updateStrategy }}
+  updateStrategy:
+    {{- toYaml .Values.daemonset.updateStrategy | nindent 4 }}
+  {{- end }}
+{{- end }}
