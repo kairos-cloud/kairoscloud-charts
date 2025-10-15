@@ -1,4 +1,4 @@
-name: Helm Chart CI/CD
+name: helm-chart
 
 on:
   push:
@@ -15,7 +15,7 @@ on:
 
 jobs:
   test:
-    name: Quality Checks
+    name: test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -24,7 +24,7 @@ jobs:
       - name: Set up Helm
         uses: azure/setup-helm@v3
         with:
-          version: 'v3.12.0'
+          version: 'v3.19.0'
 
       - name: Install helm-unittest plugin
         run: |
@@ -32,7 +32,6 @@ jobs:
 
       - name: Run Helm Lint
         run: |
-          echo "🔍 Running Helm lint..."
           for chart in charts/*/; do
             if [ -f "$chart/Chart.yaml" ]; then
               chart_name=$(basename "$chart")
@@ -44,18 +43,17 @@ jobs:
 
       - name: Run Helm Unit Tests
         run: |
-          echo "🧪 Running Helm unit tests..."
           for chart in charts/*/; do
             if [ -f "$chart/Chart.yaml" ]; then
               chart_name=$(basename "$chart")
-              echo "🔬 Testing chart: $chart_name"
+              echo "🧪 Testing chart: $chart_name"
               helm unittest "$chart" --color --strict --failfast
             fi
           done
           echo "✅ All unit tests passed!"
 
   release:
-    name: Publish Charts
+    name: publish
     needs: test
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     permissions:
