@@ -3,180 +3,479 @@
 # Declare variables to be passed into your templates.
 
 # Global chart configuration
+# nameOverride: Override the name of the chart. If set, the chart name will be replaced with this value.
+#               This affects the name of the generated Kubernetes resources.
+#               Example: nameOverride: "my-app" -> resources will be named "my-app-*"
 nameOverride: ""
+
+# fullnameOverride: Override the full name of the chart. If set, the full name will be replaced with this value.
+#                   This completely overrides the naming convention and affects all resource names.
+#                   Example: fullnameOverride: "my-custom-name" -> all resources will be named "my-custom-name"
 fullnameOverride: ""
 
 # ServiceAccount configuration
+# ServiceAccount provides an identity for processes that run in a Pod.
+# Reference: https://kubernetes.io/docs/concepts/security/service-accounts/
 serviceAccount:
-  # Specifies whether a service account should be created
+  # create: Specifies whether a ServiceAccount should be created.
+  #         If false, the chart will use an existing ServiceAccount with the name specified in 'name'.
+  #         If true, a new ServiceAccount will be created with the specified name or a generated name.
   create: true
-  # Annotations to add to the service account
+  
+  # annotations: Annotations to add to the ServiceAccount metadata.
+  #              Common annotations include:
+  #              - eks.amazonaws.com/role-arn: For AWS IAM roles (EKS)
+  #              - iam.gke.io/gcp-service-account: For GCP service accounts (GKE)
+  #              - azure.workload.identity/client-id: For Azure managed identity
   annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
+  
+  # name: The name of the ServiceAccount to use.
+  #       If not set and create is true, a name is generated using the fullname template.
+  #       If create is false, this must be set to an existing ServiceAccount name.
+  #       The ServiceAccount is used by Pods to authenticate with the Kubernetes API server.
   name: ""
 
 # Deployment configuration
+# Deployment provides declarative updates for Pods and ReplicaSets.
+# Reference: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
 deployment:
+  # enabled: Specifies whether the Deployment should be created.
+  #          If false, no Deployment will be created.
+  #          Only one workload type (Deployment, StatefulSet, DaemonSet) should be enabled at a time.
   enabled: true
+  
+  # replicaCount: The desired number of replicas for the Deployment.
+  #               This value is ignored if autoscaling (HPA/KEDA) is enabled.
+  #               Reference: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#replicas
   replicaCount: 1
   
   # Deployment strategy configuration
+  # strategy: Defines how the Deployment updates Pods when a new version is deployed.
+  #           Reference: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
   strategy:
+    # type: The deployment strategy type. Can be "RollingUpdate" or "Recreate".
+    #       - RollingUpdate: Gradually replaces old Pods with new ones (default, zero-downtime)
+    #       - Recreate: Terminates all old Pods before creating new ones (downtime required)
     type: RollingUpdate
+    
+    # rollingUpdate: Configuration for RollingUpdate strategy (ignored for Recreate).
     rollingUpdate:
+      # maxSurge: The maximum number of Pods that can be created over the desired number of Pods.
+      #           Can be an absolute number (e.g., 5) or a percentage (e.g., 25%).
+      #           Defaults to 25% if not specified.
       maxSurge: 25%
+      
+      # maxUnavailable: The maximum number of Pods that can be unavailable during the update.
+      #                 Can be an absolute number (e.g., 5) or a percentage (e.g., 25%).
+      #                 Defaults to 25% if not specified.
       maxUnavailable: 25%
   
   # Deployment lifecycle configuration
+  # revisionHistoryLimit: The number of old ReplicaSets to retain to allow rollback.
+  #                       Each revision corresponds to a Deployment update.
+  #                       Set to 0 to disable rollback history.
+  #                       Reference: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#revision-history-limit
   revisionHistoryLimit: 10
+  
+  # progressDeadlineSeconds: The maximum time in seconds for a Deployment to make progress
+  #                          before it is considered to be failed. Defaults to 600 seconds (10 minutes).
+  #                          Reference: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#progress-deadline-seconds
   progressDeadlineSeconds: 600
   
   # Init containers
+  # initContainers: List of init containers that run before the main containers start.
+  #                 Init containers must complete successfully before the main containers start.
+  #                 Reference: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
   initContainers: []
-    # - name: init-container
-    #   image: busybox:1.35
-    #   command: ['sh', '-c', 'echo "Init container running"']
   
+  # Container image configuration
+  # image: Configuration for the main container image.
   image:
+    # repository: The container image repository (without tag).
+    #             Examples: "nginx", "myregistry.com/myapp", "gcr.io/project/app"
     repository: nginx
+    
+    # pullPolicy: The image pull policy for the container.
+    #             Options: "Always", "IfNotPresent", "Never"
+    #             - Always: Always pull the image (useful for latest tags)
+    #             - IfNotPresent: Pull only if not present locally (default, recommended)
+    #             - Never: Never pull the image (assumes image is already present)
+    #             Reference: https://kubernetes.io/docs/concepts/containers/images/#updating-images
     pullPolicy: IfNotPresent
-    # Overrides the image tag whose default is the chart appVersion.
+    
+    # tag: Overrides the image tag whose default is the chart appVersion.
+    #      If empty, uses the chart's appVersion.
+    #      Examples: "1.20", "latest", "v1.0.0"
     tag: ""
   
+  # imagePullSecrets: List of secrets to use for pulling images from private registries.
+  #                   Each secret must contain credentials for the registry.
+  #                   Reference: https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
   imagePullSecrets: []
   
+  # podAnnotations: Annotations to add to the Pod metadata.
+  #                 Common annotations include:
+  #                 - prometheus.io/scrape: "true" (for Prometheus scraping)
+  #                 - prometheus.io/port: "8080" (metrics port)
+  #                 - prometheus.io/path: "/metrics" (metrics path)
+  #                 - sidecar.istio.io/inject: "true" (for Istio sidecar injection)
   podAnnotations: {}
   
+  # podSecurityContext: Security context for the Pod.
+  #                     Applies to all containers in the Pod.
+  #                     Reference: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
   podSecurityContext:
+    # fsGroup: A special supplemental group that applies to all containers in the Pod.
+    #          The ownership of any volumes mounted to the Pod will be changed to this group.
+    #          This is useful for shared storage scenarios.
     fsGroup: 2000
   
+  # securityContext: Security context for the main container.
+  #                  Reference: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
   securityContext:
+    # capabilities: Linux capabilities to add or drop from the container.
+    #               Reference: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-capabilities-for-a-container
     capabilities:
+      # drop: List of capabilities to drop from the container.
+      #       "ALL" drops all capabilities, providing maximum security.
       drop:
       - ALL
+    
+    # readOnlyRootFilesystem: Whether the container's root filesystem should be read-only.
+    #                         This prevents the container from writing to the root filesystem,
+    #                         improving security but may require additional volumes for writable directories.
     readOnlyRootFilesystem: true
+    
+    # runAsNonRoot: Indicates that the container must run as a non-root user.
+    #               This is a security best practice to prevent privilege escalation.
     runAsNonRoot: true
+    
+    # runAsUser: The UID to run the container process as.
+    #            Must be a non-root user when runAsNonRoot is true.
     runAsUser: 1000
   
+  # resources: Resource requests and limits for the container.
+  #            Reference: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+  #            We usually recommend not to specify default resources and to leave this as a conscious
+  #            choice for the user. This also increases chances charts run on environments with little
+  #            resources, such as Minikube. If you do want to specify resources, uncomment the following
+  #            lines, adjust them as necessary, and remove the curly braces after 'resources:'.
   resources:
-    # We usually recommend not to specify default resources and to leave this as a conscious
-    # choice for the user. This also increases chances charts run on environments with little
-    # resources, such as Minikube. If you do want to specify resources, uncomment the following
-    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits: Maximum amount of resources the container can use.
+    #         If the container exceeds these limits, it may be terminated.
+    #         CPU: Can be specified in cores (1, 2) or millicores (1000m, 2000m)
+    #         Memory: Can be specified in bytes (1Gi, 512Mi) or decimal (1.5Gi)
+    #         Reference: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#requests-and-limits
     limits:
       cpu: 500m
       memory: 512Mi
+    
+    # requests: Amount of resources the container requests.
+    #           Kubernetes will schedule the Pod on a node that can provide these resources.
+    #           If not specified, defaults to the limits values.
+    #           Reference: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#requests-and-limits
     requests:
       cpu: 250m
       memory: 256Mi
   
+  # nodeSelector: Node selection constraints for Pod scheduling.
+  #               Pods will only be scheduled on nodes that have the specified labels.
+  #               Reference: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
   nodeSelector: {}
   
+  # tolerations: List of tolerations for tainted nodes.
+  #              Allows Pods to be scheduled on nodes with matching taints.
+  #              Reference: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
   tolerations: []
   
+  # affinity: Advanced scheduling constraints for Pod placement.
+  #           Includes node affinity, pod affinity, and pod anti-affinity rules.
+  #           Reference: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
   affinity: {}
   
   # Additional environment variables
+  # env: List of environment variables to pass to the container.
+  #      Each variable can have a name and value, or reference a Secret/ConfigMap.
+  #      Reference: https://kubernetes.io/docs/tasks/inject-data-application/define-environment-variable-container/
   env: []
-    # - name: ENV_VAR_NAME
-    #   value: "value"
   
   # Additional volumes
+  # extraVolumes: List of additional volumes to mount to the Pod.
+  #               Common volume types include ConfigMap, Secret, PersistentVolumeClaim, etc.
+  #               Reference: https://kubernetes.io/docs/concepts/storage/volumes/
   extraVolumes: []
-    # - name: extra-volume
-    #   configMap:
-    #     name: extra-config
   
   # Additional volume mounts
+  # extraVolumeMounts: List of volume mounts for the main container.
+  #                    These volumes must be defined in extraVolumes.
+  #                    Reference: https://kubernetes.io/docs/concepts/storage/volumes/
   extraVolumeMounts: []
-    # - name: extra-volume
-    #   mountPath: /extra/path
   
   # Liveness and readiness probes
+  # livenessProbe: Health check to determine if the container is running properly.
+  #                If the probe fails, Kubernetes will restart the container.
+  #                Reference: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
   livenessProbe:
+    # enabled: Whether to enable the liveness probe.
     enabled: true
+    
+    # httpGet: HTTP GET request configuration for the probe.
+    #          Other options include tcpSocket, exec, grpc.
     httpGet:
+      # path: HTTP path to check (e.g., /health, /ping, /status)
       path: /health
+      # port: Port to check (can be port name or number)
       port: http
+    
+    # initialDelaySeconds: Number of seconds after the container has started before liveness probes are initiated.
+    #                      Useful for applications that take time to start up.
     initialDelaySeconds: 30
+    
+    # periodSeconds: How often (in seconds) to perform the probe.
+    #                Defaults to 10 seconds.
     periodSeconds: 10
+    
+    # timeoutSeconds: Number of seconds after which the probe times out.
+    #                 Defaults to 1 second.
     timeoutSeconds: 5
+    
+    # failureThreshold: Minimum consecutive failures for the probe to be considered failed.
+    #                   After this many failures, the container will be restarted.
     failureThreshold: 3
   
+  # readinessProbe: Health check to determine if the container is ready to accept traffic.
+  #                 If the probe fails, the Pod will be removed from service endpoints.
+  #                 Reference: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
   readinessProbe:
+    # enabled: Whether to enable the readiness probe.
     enabled: true
+    
+    # httpGet: HTTP GET request configuration for the probe.
     httpGet:
+      # path: HTTP path to check (e.g., /ready, /health/ready)
       path: /ready
+      # port: Port to check (can be port name or number)
       port: http
+    
+    # initialDelaySeconds: Number of seconds after the container has started before readiness probes are initiated.
     initialDelaySeconds: 5
+    
+    # periodSeconds: How often (in seconds) to perform the probe.
     periodSeconds: 5
+    
+    # timeoutSeconds: Number of seconds after which the probe times out.
     timeoutSeconds: 3
+    
+    # failureThreshold: Minimum consecutive failures for the probe to be considered failed.
+    #                   After this many failures, the Pod will be marked as not ready.
     failureThreshold: 3
   
   # Startup probe
+  # startupProbe: Health check to determine if the container has started.
+  #               This probe is useful for slow-starting containers.
+  #               Reference: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
   startupProbe:
+    # enabled: Whether to enable the startup probe.
     enabled: false
+    
+    # httpGet: HTTP GET request configuration for the probe.
     httpGet:
+      # path: HTTP path to check (e.g., /startup, /health/startup)
       path: /startup
+      # port: Port to check (can be port name or number)
       port: http
+    
+    # initialDelaySeconds: Number of seconds after the container has started before startup probes are initiated.
     initialDelaySeconds: 10
+    
+    # periodSeconds: How often (in seconds) to perform the probe.
+    #                Should be shorter than the expected startup time.
     periodSeconds: 10
+    
+    # timeoutSeconds: Number of seconds after which the probe times out.
     timeoutSeconds: 1
+    
+    # failureThreshold: Minimum consecutive failures for the probe to be considered failed.
+    #                   After this many failures, the container will be restarted.
+    #                   Should be high enough to allow for slow startup times.
     failureThreshold: 30
 
 # Service configuration
+# Service is an abstraction which defines a logical set of Pods and a policy by which to access them.
+# Reference: https://kubernetes.io/docs/concepts/services-networking/service/
 service:
+  # type: The type of Service to create.
+  #       Options: "ClusterIP", "NodePort", "LoadBalancer", "ExternalName"
+  #       - ClusterIP: Exposes the service on a cluster-internal IP (default)
+  #       - NodePort: Exposes the service on each Node's IP at a static port
+  #       - LoadBalancer: Exposes the service externally using a cloud provider's load balancer
+  #       - ExternalName: Maps the service to the contents of the externalName field
+  #       Reference: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
   type: ClusterIP
+  
+  # port: The port that the service will expose.
+  #       This is the port that clients will connect to.
   port: 80
+  
+  # targetPort: The port on the Pod that the service will forward traffic to.
+  #             If not specified, defaults to the same value as port.
   targetPort: 8080
+  
+  # annotations: Annotations to add to the Service metadata.
+  #              Common annotations include:
+  #              - service.beta.kubernetes.io/aws-load-balancer-type: "nlb" (for AWS NLB)
+  #              - cloud.google.com/load-balancer-type: "Internal" (for GCP internal LB)
+  #              - service.beta.kubernetes.io/azure-load-balancer-internal: "true" (for Azure internal LB)
   annotations: {}
   
   # Service session affinity
+  # sessionAffinity: Controls how client IPs are distributed to backend Pods.
+  #                  Options: "None", "ClientIP"
+  #                  - None: No session affinity (default)
+  #                  - ClientIP: All requests from the same client IP go to the same Pod
+  #                  Reference: https://kubernetes.io/docs/concepts/services-networking/service/#virtual-ips-and-service-proxies
   sessionAffinity: None
+  
+  # sessionAffinityConfig: Configuration for session affinity.
+  #                        Only used when sessionAffinity is "ClientIP".
   sessionAffinityConfig:
+    # clientIP: Configuration for ClientIP session affinity.
     clientIP:
+      # timeoutSeconds: Number of seconds a connection can stay idle before being reset.
+      #                 Defaults to 10800 seconds (3 hours).
       timeoutSeconds: 10800
   
   # LoadBalancer and NodePort specific settings
+  # externalTrafficPolicy: Specifies how external traffic is routed to backend Pods.
+  #                        Options: "Cluster", "Local"
+  #                        - Cluster: Traffic can be routed to any Pod in the cluster (default)
+  #                        - Local: Traffic is only routed to Pods on the same node as the service
+  #                        Only applies to LoadBalancer and NodePort services.
+  #                        Reference: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
   externalTrafficPolicy: Cluster
+  
+  # loadBalancerSourceRanges: List of CIDR blocks that are allowed to access the LoadBalancer.
+  #                           If not specified, all traffic is allowed.
+  #                           Only applies to LoadBalancer services.
+  #                           Reference: https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer
   loadBalancerSourceRanges: []
   
   # IP family configuration
+  # ipFamily: The IP family (IPv4 or IPv6) for the service.
+  #           Options: "IPv4", "IPv6"
+  #           Reference: https://kubernetes.io/docs/concepts/services-networking/dual-stack/
   ipFamily: IPv4
+  
+  # ipFamilyPolicy: The IP family policy for the service.
+  #                 Options: "SingleStack", "PreferDualStack", "RequireDualStack"
+  #                 - SingleStack: Only one IP family (default)
+  #                 - PreferDualStack: Prefer dual stack, fallback to single stack
+  #                 - RequireDualStack: Require dual stack, fail if not available
+  #                 Reference: https://kubernetes.io/docs/concepts/services-networking/dual-stack/
   ipFamilyPolicy: SingleStack
 
 # Ingress configuration
+# Ingress exposes HTTP and HTTPS routes from outside the cluster to services within the cluster.
+# Reference: https://kubernetes.io/docs/concepts/services-networking/ingress/
 ingress:
+  # enabled: Specifies whether the Ingress should be created.
   enabled: false
+  
+  # className: The IngressClass that should be used for this Ingress.
+  #            This replaces the deprecated kubernetes.io/ingress.class annotation.
+  #            Common values: "nginx", "traefik", "istio", "alb"
+  #            Reference: https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-class
   className: ""
+  
+  # annotations: Annotations to add to the Ingress metadata.
+  #              Common annotations include:
+  #              - kubernetes.io/ingress.class: "nginx" (deprecated, use className instead)
+  #              - cert-manager.io/cluster-issuer: "letsencrypt-prod" (for automatic TLS)
+  #              - nginx.ingress.kubernetes.io/ssl-redirect: "true" (force HTTPS)
+  #              - nginx.ingress.kubernetes.io/rewrite-target: "/" (URL rewriting)
+  #              - alb.ingress.kubernetes.io/scheme: "internet-facing" (for AWS ALB)
   annotations: {}
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
+  
+  # hosts: List of hosts and paths for the Ingress.
+  #        Each host can have multiple paths with different path types.
   hosts:
     - host: chart-example.local
       paths:
+        # path: The path to match for incoming requests.
+        #       Can be exact match, prefix match, or regex match.
         - path: /
+          # pathType: How the path should be matched.
+          #           Options: "Exact", "Prefix", "ImplementationSpecific"
+          #           - Exact: Exact string match
+          #           - Prefix: Prefix match (most common)
+          #           - ImplementationSpecific: Depends on the IngressClass
+          #           Reference: https://kubernetes.io/docs/concepts/services-networking/ingress/#path-types
           pathType: Prefix
+  
+  # tls: TLS configuration for the Ingress.
+  #      Each entry can specify a secret name and list of hosts.
+  #      The secret should contain the TLS certificate and private key.
+  #      Reference: https://kubernetes.io/docs/concepts/services-networking/ingress/#tls
   tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
+    #  - secretName: chart-example-tls
+    #    hosts:
+    #      - chart-example.local
 
 # Autoscaling configuration
+# HorizontalPodAutoscaler automatically scales the number of Pods based on observed metrics.
+# Reference: https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/
 autoscaling:
+  # enabled: Specifies whether the HorizontalPodAutoscaler should be created.
+  #          If enabled, the deployment.replicaCount will be ignored.
   enabled: false
+  
+  # minReplicas: The minimum number of replicas for the autoscaler.
+  #              The autoscaler will never scale below this number.
   minReplicas: 1
+  
+  # maxReplicas: The maximum number of replicas for the autoscaler.
+  #              The autoscaler will never scale above this number.
   maxReplicas: 100
+  
+  # targetCPUUtilizationPercentage: The target average CPU utilization percentage.
+  #                                 The autoscaler will scale to maintain this CPU utilization.
+  #                                 Set to null to disable CPU-based scaling.
   targetCPUUtilizationPercentage: 80
-  # targetMemoryUtilizationPercentage: 80
+  
+  # targetMemoryUtilizationPercentage: The target average memory utilization percentage.
+  #                                    The autoscaler will scale to maintain this memory utilization.
+  #                                    Set to null to disable memory-based scaling.
+  targetMemoryUtilizationPercentage: 80
 
 # StatefulSet specific configuration
+# StatefulSet manages the deployment and scaling of a set of Pods with persistent identities.
+# Reference: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/
 statefulset:
+  # enabled: Specifies whether the StatefulSet should be created.
+  #          If false, no StatefulSet will be created.
+  #          Only one workload type (Deployment, StatefulSet, DaemonSet) should be enabled at a time.
   enabled: false
+  
+  # serviceName: The name of the service that governs this StatefulSet.
+  #              This service must exist before the StatefulSet, and is responsible for the network identity of the set.
+  #              Reference: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#stable-network-id
   serviceName: ""
+  
+  # podManagementPolicy: Controls how Pods are created, updated, and deleted.
+  #                      Options: "OrderedReady", "Parallel"
+  #                      - OrderedReady: Pods are created, updated, and deleted in order (default)
+  #                      - Parallel: Pods are created, updated, and deleted in parallel
+  #                      Reference: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#pod-management-policies
   podManagementPolicy: OrderedReady
+  
+  # updateStrategy: The strategy used to replace existing Pods with new ones.
+  #                 Reference: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies
   updateStrategy:
+    # type: The update strategy type. Can be "RollingUpdate" or "OnDelete".
+    #       - RollingUpdate: Pods are updated in order (default)
+    #       - OnDelete: Pods are only updated when manually deleted
     type: RollingUpdate
   
   # Pod configuration (similar to deployment)
@@ -270,9 +569,21 @@ statefulset:
     failureThreshold: 30
 
 # DaemonSet specific configuration
+# DaemonSet ensures that all (or some) Nodes run a copy of a Pod.
+# Reference: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/
 daemonset:
+  # enabled: Specifies whether the DaemonSet should be created.
+  #          If false, no DaemonSet will be created.
+  #          Only one workload type (Deployment, StatefulSet, DaemonSet) should be enabled at a time.
   enabled: false
+  
+  # updateStrategy: The strategy used to replace existing DaemonSet Pods with new ones.
+  #                 Reference: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/#update-strategy
   updateStrategy:
+    # type: The update strategy type. Can be "RollingUpdate" or "OnDelete".
+    #       - RollingUpdate: Pods are updated in order (default)
+    #       - OnDelete: Pods are only updated when manually deleted
+    #       Reference: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/#update-strategy
     type: RollingUpdate
   
   # Pod configuration (similar to deployment and statefulset)
@@ -370,24 +681,89 @@ daemonset:
     failureThreshold: 30
 
 # PersistentVolumeClaim configuration
+# PersistentVolumeClaim (PVC) is a request for storage by a user.
+# Reference: https://kubernetes.io/docs/concepts/storage/persistent-volumes/
 persistence:
+  # enabled: Specifies whether the PersistentVolumeClaim should be created.
+  #          PVCs are used to request storage resources for applications that need persistent data.
   enabled: false
+  
+  # storageClass: The name of the StorageClass to use for this PVC.
+  #               If empty, the default StorageClass will be used.
+  #               Reference: https://kubernetes.io/docs/concepts/storage/persistent-volumes/#storage-classes
   storageClass: ""
+  
+  # accessMode: The access mode for the PVC.
+  #             Options: "ReadWriteOnce", "ReadOnlyMany", "ReadWriteMany"
+  #             - ReadWriteOnce: Can be mounted as read-write by a single node
+  #             - ReadOnlyMany: Can be mounted read-only by many nodes
+  #             - ReadWriteMany: Can be mounted as read-write by many nodes
+  #             Reference: https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes
   accessMode: ReadWriteOnce
+  
+  # size: The size of the storage requested.
+  #       Can be specified in bytes (1Gi, 512Mi) or decimal (1.5Gi).
+  #       Reference: https://kubernetes.io/docs/concepts/storage/persistent-volumes/#resources
   size: 8Gi
+  
+  # annotations: Annotations to add to the PVC metadata.
+  #              Common annotations include:
+  #              - volume.beta.kubernetes.io/storage-class: "fast-ssd"
   annotations: {}
 
 # StorageClass configuration for dynamic volume provisioning
+# StorageClass describes the classes of storage available.
+# Reference: https://kubernetes.io/docs/concepts/storage/storage-classes/
 storageClass:
+  # enabled: Specifies whether the StorageClass should be created.
   enabled: false
+  
+  # annotations: Annotations to add to the StorageClass metadata.
+  #              Common annotations include:
+  #              - storageclass.kubernetes.io/is-default-class: "true" (mark as default)
   annotations: {}
+  
+  # provisioner: The provisioner that should be used for this StorageClass.
+  #              Common provisioners:
+  #              - kubernetes.io/aws-ebs (AWS EBS)
+  #              - kubernetes.io/gce-pd (GCP Persistent Disk)
+  #              - kubernetes.io/azure-disk (Azure Disk)
+  #              - kubernetes.io/no-provisioner (manual provisioning)
+  #              Reference: https://kubernetes.io/docs/concepts/storage/storage-classes/#provisioner
   provisioner: kubernetes.io/no-provisioner
+  
+  # parameters: Parameters for the provisioner.
+  #             These are specific to the provisioner being used.
+  #             Common parameters:
+  #             - type: ssd, hdd (for cloud providers)
+  #             - zone: availability zone
+  #             - fsType: filesystem type (ext4, xfs, etc.)
   parameters: {}
     # type: ssd
     # zone: us-west1-a
+  
+  # reclaimPolicy: The reclaim policy for volumes created with this StorageClass.
+  #                Options: "Delete", "Retain"
+  #                - Delete: Volumes are deleted when the PVC is deleted (default)
+  #                - Retain: Volumes are retained when the PVC is deleted
+  #                Reference: https://kubernetes.io/docs/concepts/storage/persistent-volumes/#reclaiming
   reclaimPolicy: Delete
+  
+  # allowVolumeExpansion: Whether volumes created with this StorageClass can be expanded.
+  #                       Requires the CSI driver to support volume expansion.
+  #                       Reference: https://kubernetes.io/docs/concepts/storage/persistent-volumes/#expanding-persistent-volumes-claims
   allowVolumeExpansion: false
+  
+  # volumeBindingMode: When volume binding and dynamic provisioning should occur.
+  #                    Options: "Immediate", "WaitForFirstConsumer"
+  #                    - Immediate: Binding occurs immediately (default)
+  #                    - WaitForFirstConsumer: Binding is delayed until a Pod uses the PVC
+  #                    Reference: https://kubernetes.io/docs/concepts/storage/storage-classes/#volume-binding-mode
   volumeBindingMode: Immediate
+  
+  # allowedTopologies: Restrict which topology segments volumes can be provisioned in.
+  #                    Used for zone-aware storage provisioning.
+  #                    Reference: https://kubernetes.io/docs/concepts/storage/storage-classes/#allowed-topologies
   allowedTopologies: []
     # - matchLabelExpressions:
     #     - key: topology.kubernetes.io/zone
@@ -396,34 +772,105 @@ storageClass:
     #         - us-west1-b
 
 # ConfigMap configuration
+# ConfigMap allows you to decouple configuration artifacts from image content to keep containerized applications portable.
+# Reference: https://kubernetes.io/docs/concepts/configuration/configmap/
 configMap:
-  enabled: true
+  # enabled: Specifies whether the ConfigMap should be created.
+  #          ConfigMaps are commonly used to store configuration data, environment variables, and other non-sensitive data.
+  enabled: false
+  
+  # data: Key-value pairs to store in the ConfigMap.
+  #       These can be referenced by Pods as environment variables, command-line arguments, or volume mounts.
+  #       Common use cases:
+  #       - Application configuration files
+  #       - Environment-specific settings
+  #       - Feature flags
+  #       - Database connection strings (non-sensitive)
+  #       Reference: https://kubernetes.io/docs/concepts/configuration/configmap/#using-configmaps
   data: {}
-    # key1: value1
-    # key2: value2
 
 # PodDisruptionBudget configuration
+# PodDisruptionBudget limits the number of Pods of a replicated application that are down simultaneously from voluntary disruptions.
+# Reference: https://kubernetes.io/docs/concepts/workloads/pods/disruptions/
 podDisruptionBudget:
+  # enabled: Specifies whether the PodDisruptionBudget should be created.
+  #          PDBs help ensure application availability during cluster maintenance and node updates.
   enabled: false
+  
+  # minAvailable: The minimum number of Pods that must be available during disruptions.
+  #               Can be specified as an absolute number (e.g., 1) or a percentage (e.g., 50%).
+  #               Only one of minAvailable or maxUnavailable can be specified.
+  #               Reference: https://kubernetes.io/docs/concepts/workloads/pods/disruptions/#how-disruption-budgets-work
   minAvailable: 1
+  
+  # maxUnavailable: The maximum number of Pods that can be unavailable during disruptions.
+  #                 Can be specified as an absolute number (e.g., 1) or a percentage (e.g., 25%).
+  #                 Only one of minAvailable or maxUnavailable can be specified.
+  #                 Reference: https://kubernetes.io/docs/concepts/workloads/pods/disruptions/#how-disruption-budgets-work
   # maxUnavailable: 1
 
 # NetworkPolicy configuration
+# NetworkPolicy provides network-level security by controlling traffic flow between Pods and other network endpoints.
+# Reference: https://kubernetes.io/docs/concepts/services-networking/network-policies/
 networkPolicy:
+  # enabled: Specifies whether the NetworkPolicy should be created.
+  #          NetworkPolicies are essential for implementing network segmentation and micro-segmentation.
   enabled: false
+  
+  # ingress: Ingress rules define which traffic is allowed to reach the Pods.
+  #          If no ingress rules are specified, all ingress traffic is denied by default.
+  #          Reference: https://kubernetes.io/docs/concepts/services-networking/network-policies/#the-networkpolicy-resource
   ingress:
-    enabled: true
+    # enabled: Whether to create ingress rules.
+    #          If false, no ingress traffic will be allowed.
+    enabled: false
+    
+    # namespaceSelector: Selects namespaces based on their labels.
+    #                   Traffic from Pods in matching namespaces will be allowed.
+    #                   Empty object {} matches all namespaces.
+    #                   Reference: https://kubernetes.io/docs/concepts/services-networking/network-policies/#behavior-of-to-and-from-selectors
     namespaceSelector: {}
+    
+    # podSelector: Selects Pods within the same namespace based on their labels.
+    #             Traffic from matching Pods will be allowed.
+    #             Empty object {} matches all Pods in the namespace.
+    #             Reference: https://kubernetes.io/docs/concepts/services-networking/network-policies/#behavior-of-to-and-from-selectors
     podSelector: {}
+    
+    # ipBlocks: List of CIDR blocks that are allowed to send traffic.
+    #          Useful for allowing traffic from specific IP ranges or external networks.
+    #          Reference: https://kubernetes.io/docs/concepts/services-networking/network-policies/#ipblock-examples
     ipBlocks: []
+    
+    # ports: List of ports and protocols that are allowed for ingress traffic.
+    #        If not specified, all ports are allowed.
+    #        Reference: https://kubernetes.io/docs/concepts/services-networking/network-policies/#behavior-of-to-and-from-selectors
     ports:
       - protocol: TCP
         port: 80
+  
+  # egress: Egress rules define which traffic is allowed to leave the Pods.
+  #         If no egress rules are specified, all egress traffic is denied by default.
+  #         Reference: https://kubernetes.io/docs/concepts/services-networking/network-policies/#the-networkpolicy-resource
   egress:
-    enabled: true
+    # enabled: Whether to create egress rules.
+    #          If false, no egress traffic will be allowed.
+    enabled: false
+    
+    # namespaceSelector: Selects namespaces based on their labels.
+    #                   Traffic to Pods in matching namespaces will be allowed.
     namespaceSelector: {}
+    
+    # podSelector: Selects Pods within the same namespace based on their labels.
+    #             Traffic to matching Pods will be allowed.
     podSelector: {}
+    
+    # ipBlocks: List of CIDR blocks that traffic is allowed to reach.
+    #          Commonly used for external services like DNS, APIs, or databases.
     ipBlocks: []
+    
+    # ports: List of ports and protocols that are allowed for egress traffic.
+    #        Common examples include DNS (53), HTTPS (443), and database ports.
     ports:
       - protocol: TCP
         port: 53
@@ -431,120 +878,399 @@ networkPolicy:
         port: 53
 
 # Secret configuration
+# Secret is an object that contains a small amount of sensitive data such as a password, a token, or a key.
+# Reference: https://kubernetes.io/docs/concepts/configuration/secret/
 secret:
+  # enabled: Specifies whether the Secret should be created.
+  #          Secrets are used to store sensitive information like passwords, tokens, and keys.
   enabled: false
+  
+  # type: The type of Secret to create.
+  #       Common types:
+  #       - Opaque: arbitrary user-defined data (default)
+  #       - kubernetes.io/service-account-token: service account token
+  #       - kubernetes.io/dockercfg: Docker registry credentials
+  #       - kubernetes.io/tls: TLS certificate and key
+  #       - kubernetes.io/basic-auth: basic authentication credentials
+  #       - kubernetes.io/ssh-auth: SSH authentication credentials
+  #       Reference: https://kubernetes.io/docs/concepts/configuration/secret/#secret-types
   type: Opaque
+  
+  # annotations: Annotations to add to the Secret metadata.
+  #              Common annotations include:
+  #              - kubernetes.io/service-account.name: service account name
+  #              - kubernetes.io/service-account.uid: service account UID
   annotations: {}
+  
+  # data: Key-value pairs where the values are base64-encoded.
+  #       Use this for binary data or when you want to encode the values yourself.
+  #       Reference: https://kubernetes.io/docs/concepts/configuration/secret/#creating-a-secret-manually
   data: {}
-    # key1: value1
-    # key2: value2
+  
+  # stringData: Key-value pairs where the values are plain text strings.
+  #             Kubernetes will automatically base64-encode these values.
+  #             This is more convenient for human-readable data.
+  #             Reference: https://kubernetes.io/docs/concepts/configuration/secret/#creating-a-secret-manually
   stringData: {}
-    # key1: value1
-    # key2: value2
 
-# RBAC configuration
-rbac:
+# Role configuration
+# Role is a namespaced resource that defines a set of permissions within a specific namespace.
+# Reference: https://kubernetes.io/docs/reference/access-authn-authz/rbac/#role-and-clusterrole
+role:
+  # enabled: Specifies whether the Role should be created.
+  #          Roles are namespace-scoped and define permissions within that namespace.
   enabled: false
+  
+  # annotations: Annotations to add to the Role metadata.
+  annotations: {}
+  
+  # rules: List of policy rules for the Role.
+  #        Each rule specifies a set of permissions for specific API resources.
+  #        Reference: https://kubernetes.io/docs/reference/access-authn-authz/rbac/#role-and-clusterrole
   rules: []
-    # - apiGroups: [""]
-    #   resources: ["pods"]
-    #   verbs: ["get", "list", "watch"]
-  clusterRole:
-    enabled: false
-    rules: []
-      # - apiGroups: [""]
-      #   resources: ["nodes"]
-      #   verbs: ["get", "list", "watch"]
+
+# RoleBinding configuration
+# RoleBinding grants the permissions defined in a Role to a user or set of users within a specific namespace.
+# Reference: https://kubernetes.io/docs/reference/access-authn-authz/rbac/#rolebinding-and-clusterrolebinding
+roleBinding:
+  # enabled: Specifies whether the RoleBinding should be created.
+  #          RoleBindings are namespace-scoped and bind Roles to subjects within that namespace.
+  enabled: false
+  
+  # annotations: Annotations to add to the RoleBinding metadata.
+  annotations: {}
+  
+  # roleRef: Reference to the Role that this RoleBinding binds.
+  #          Reference: https://kubernetes.io/docs/reference/access-authn-authz/rbac/#rolebinding-and-clusterrolebinding
+  roleRef:
+    # apiGroup: The API group of the Role. Usually "rbac.authorization.k8s.io"
+    apiGroup: rbac.authorization.k8s.io
+    # kind: The kind of the Role. Should be "Role"
+    kind: Role
+    # name: The name of the Role to bind
+    name: ""
+  
+  # subjects: List of subjects to bind the Role to.
+  #           Subjects can be users, groups, or service accounts.
+  #           Reference: https://kubernetes.io/docs/reference/access-authn-authz/rbac/#rolebinding-and-clusterrolebinding
+  subjects: []
+
+# ClusterRole configuration
+# ClusterRole is a cluster-scoped resource that defines a set of permissions across the entire cluster.
+# Reference: https://kubernetes.io/docs/reference/access-authn-authz/rbac/#role-and-clusterrole
+clusterRole:
+  # enabled: Specifies whether the ClusterRole should be created.
+  #          ClusterRoles are cluster-scoped and define permissions across the entire cluster.
+  enabled: false
+  
+  # annotations: Annotations to add to the ClusterRole metadata.
+  annotations: {}
+  
+  # rules: List of policy rules for the ClusterRole.
+  #        These rules can reference cluster-scoped resources like nodes, persistent volumes, etc.
+  #        Reference: https://kubernetes.io/docs/reference/access-authn-authz/rbac/#role-and-clusterrole
+  rules: []
+
+# ClusterRoleBinding configuration
+# ClusterRoleBinding grants the permissions defined in a ClusterRole to a user or set of users across the entire cluster.
+# Reference: https://kubernetes.io/docs/reference/access-authn-authz/rbac/#rolebinding-and-clusterrolebinding
+clusterRoleBinding:
+  # enabled: Specifies whether the ClusterRoleBinding should be created.
+  #          ClusterRoleBindings are cluster-scoped and bind ClusterRoles to subjects across the entire cluster.
+  enabled: false
+  
+  # annotations: Annotations to add to the ClusterRoleBinding metadata.
+  annotations: {}
+  
+  # roleRef: Reference to the ClusterRole that this ClusterRoleBinding binds.
+  #          Reference: https://kubernetes.io/docs/reference/access-authn-authz/rbac/#rolebinding-and-clusterrolebinding
+  roleRef:
+    # apiGroup: The API group of the ClusterRole. Usually "rbac.authorization.k8s.io"
+    apiGroup: rbac.authorization.k8s.io
+    # kind: The kind of the ClusterRole. Should be "ClusterRole"
+    kind: ClusterRole
+    # name: The name of the ClusterRole to bind
+    name: ""
+  
+  # subjects: List of subjects to bind the ClusterRole to.
+  #           Subjects can be users, groups, or service accounts.
+  #           Reference: https://kubernetes.io/docs/reference/access-authn-authz/rbac/#rolebinding-and-clusterrolebinding
+  subjects: []
 
 # ServiceMonitor configuration (Prometheus)
+# ServiceMonitor defines how Prometheus should scrape metrics from a Kubernetes Service.
+# Reference: https://prometheus-operator.dev/docs/operator/api/#servicemonitor
 serviceMonitor:
+  # enabled: Specifies whether the ServiceMonitor should be created.
+  #          ServiceMonitor is used by Prometheus Operator to automatically discover and scrape metrics.
   enabled: false
+  
+  # labels: Labels to add to the ServiceMonitor metadata.
+  #         Prometheus Operator uses these labels to select which ServiceMonitors to use.
+  #         Common labels include:
+  #         - release: prometheus (for Prometheus Operator)
+  #         - app.kubernetes.io/component: monitoring
   labels: {}
+  
+  # annotations: Annotations to add to the ServiceMonitor metadata.
   annotations: {}
+  
+  # port: The port name or number of the service to scrape.
+  #       Must match a port defined in the Service resource.
   port: http
+  
+  # path: The HTTP path to scrape metrics from.
+  #       Common paths: /metrics, /actuator/prometheus, /stats/prometheus
   path: /metrics
+  
+  # interval: How often Prometheus should scrape the target.
+  #           Common values: 15s, 30s, 1m, 5m
+  #           Reference: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config
   interval: 30s
+  
+  # scrapeTimeout: How long to wait for a response before timing out.
+  #                Should be less than the interval.
+  #                Reference: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config
   scrapeTimeout: 10s
+  
+  # scheme: The URL scheme to use for scraping.
+  #         Options: "http", "https"
   scheme: http
+  
+  # tlsConfig: TLS configuration for HTTPS scraping.
+  #            Reference: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#tls_config
   tlsConfig: {}
+  
+  # bearerTokenSecret: Secret containing the bearer token for authentication.
+  #                   Reference: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config
   bearerTokenSecret: {}
+  
+  # basicAuth: Basic authentication configuration.
+  #           Reference: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config
   basicAuth: {}
+  
+  # namespaceSelector: Selects namespaces to discover services in.
+  #                   If empty, uses the same namespace as the ServiceMonitor.
+  #                   Reference: https://prometheus-operator.dev/docs/operator/api/#namespaceselector
   namespaceSelector: {}
+  
+  # sampleLimit: Maximum number of samples to accept per scrape.
+  #              Set to 0 for no limit.
+  #              Reference: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config
   sampleLimit: 0
 
 # PrometheusRule configuration for alerting
+# PrometheusRule defines alerting and recording rules for Prometheus.
+# Reference: https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/
 prometheusRule:
+  # enabled: Specifies whether the PrometheusRule should be created.
+  #          Requires Prometheus Operator to be installed in the cluster.
   enabled: false
+  
+  # labels: Labels to add to the PrometheusRule metadata.
+  #         Common labels include:
+  #         - app.kubernetes.io/component: monitoring
+  #         - prometheus: kube-prometheus
   labels: {}
+  
+  # annotations: Annotations to add to the PrometheusRule metadata.
+  #              Common annotations include:
+  #              - description: "Prometheus rules for application monitoring"
   annotations: {}
+  
+  # groups: List of rule groups containing alerting and recording rules.
+  #         Each group can contain multiple rules with different expressions and thresholds.
+  #         Reference: https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/#rule_group
   groups: []
-    # - name: kairoscloud.rules
-    #   interval: 30s
-    #   rules:
-    #     - alert: KairosCloudDown
-    #       expr: up{job="kairoscloud"} == 0
-    #       for: 1m
-    #       labels:
-    #         severity: critical
-    #       annotations:
-    #         summary: "KairosCloud instance is down"
-    #         description: "KairosCloud instance {{ $labels.instance }} has been down for more than 1 minute."
-    #     - alert: HighMemoryUsage
-    #       expr: (container_memory_usage_bytes{name="kairoscloud"} / container_spec_memory_limit_bytes) * 100 > 80
-    #       for: 5m
-    #       labels:
-    #         severity: warning
-    #       annotations:
-    #         summary: "High memory usage detected"
-    #         description: "Memory usage is above 80% for more than 5 minutes."
 
 # Certificate configuration (cert-manager)
+# Certificate represents a single X.509 certificate and its associated metadata.
+# Reference: https://cert-manager.io/docs/concepts/certificate/
 certificate:
+  # enabled: Specifies whether the Certificate should be created.
+  #          Requires cert-manager to be installed in the cluster.
   enabled: false
+  
+  # annotations: Annotations to add to the Certificate metadata.
+  #              Common annotations include:
+  #              - cert-manager.io/issue-temporary-certificate: "true" (for temporary certificates)
   annotations: {}
+  
+  # issuerRef: Reference to the Issuer or ClusterIssuer that should issue this certificate.
+  #            Reference: https://cert-manager.io/docs/concepts/certificate/#issuer-ref
   issuerRef:
+    # name: The name of the Issuer or ClusterIssuer resource.
+    #       Common issuers: letsencrypt-prod, letsencrypt-staging, selfsigned
     name: ""
+    
+    # kind: The kind of issuer. Options: "Issuer", "ClusterIssuer"
+    #       - Issuer: Namespace-scoped issuer
+    #       - ClusterIssuer: Cluster-scoped issuer
     kind: Issuer
+    
+    # group: The API group of the issuer. Usually "cert-manager.io"
     group: cert-manager.io
+  
+  # dnsNames: List of DNS names that should be included in the certificate.
+  #           These are the Subject Alternative Names (SANs) for the certificate.
+  #           Reference: https://cert-manager.io/docs/concepts/certificate/#dns-names
   dnsNames: []
-    # - example.com
-    # - www.example.com
+  
+  # commonName: The Common Name (CN) for the certificate.
+  #             If not specified, the first DNS name will be used as the CN.
+  #             Reference: https://cert-manager.io/docs/concepts/certificate/#common-name
   commonName: ""
+  
+  # duration: The duration for which the certificate should be valid.
+  #           If not specified, the issuer's default duration will be used.
+  #           Format: "1h", "24h", "720h" (30 days), "8760h" (1 year)
+  #           Reference: https://cert-manager.io/docs/concepts/certificate/#duration
   duration: ""
+  
+  # renewBefore: How long before the certificate expires it should be renewed.
+  #              If not specified, the issuer's default renewal time will be used.
+  #              Format: "1h", "24h", "168h" (1 week)
+  #              Reference: https://cert-manager.io/docs/concepts/certificate/#renew-before
   renewBefore: ""
+  
+  # usages: List of key usages for the certificate.
+  #         Common usages: "digital signature", "key encipherment", "server auth", "client auth"
+  #         Reference: https://cert-manager.io/docs/concepts/certificate/#usages
   usages: []
+  
+  # keyAlgorithm: The private key algorithm to use.
+  #               Options: "RSA", "ECDSA"
+  #               - RSA: More widely supported, larger key sizes
+  #               - ECDSA: More efficient, smaller key sizes
+  #               Reference: https://cert-manager.io/docs/concepts/certificate/#key-algorithm
   keyAlgorithm: RSA
   keySize: 2048
 
 # VolumeSnapshot configuration
+# VolumeSnapshot represents a snapshot of a volume on a storage system.
+# Reference: https://kubernetes.io/docs/concepts/storage/volume-snapshots/
 volumeSnapshot:
+  # enabled: Specifies whether the VolumeSnapshot should be created.
+  #          VolumeSnapshots are used for backup and disaster recovery purposes.
   enabled: false
+  
+  # annotations: Annotations to add to the VolumeSnapshot metadata.
+  #              Common annotations include:
+  #              - snapshot.storage.kubernetes.io/volumesnapshotclass: "csi-snapshotter"
   annotations: {}
+  
+  # source: The source of the volume snapshot.
+  #         Reference: https://kubernetes.io/docs/concepts/storage/volume-snapshots/#volumesnapshot
   source:
+    # persistentVolumeClaimName: The name of the PersistentVolumeClaim to snapshot.
+    #                           This is the most common way to create a snapshot.
+    #                           Reference: https://kubernetes.io/docs/concepts/storage/volume-snapshots/#volumesnapshot
     persistentVolumeClaimName: ""
+    
+    # volumeSnapshotContentName: The name of the VolumeSnapshotContent to use.
+    #                           This is used for pre-provisioned snapshots.
+    #                           Reference: https://kubernetes.io/docs/concepts/storage/volume-snapshots/#volumesnapshotcontent
     volumeSnapshotContentName: ""
+  
+  # volumeSnapshotClassName: The name of the VolumeSnapshotClass to use.
+  #                         This determines the storage system and snapshot parameters.
+  #                         Reference: https://kubernetes.io/docs/concepts/storage/volume-snapshots/#volumesnapshotclass
   volumeSnapshotClassName: ""
 
 # CronJob configuration
+# CronJob creates Jobs on a time-based schedule, similar to the Unix cron utility.
+# Reference: https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/
 cronJob:
+  # enabled: Specifies whether the CronJob should be created.
+  #          CronJobs are useful for periodic tasks like backups, cleanup, and maintenance.
   enabled: false
+  
+  # annotations: Annotations to add to the CronJob metadata.
   annotations: {}
+  
+  # schedule: The schedule for the CronJob in cron format.
+  #           Format: "minute hour day month day-of-week"
+  #           Examples:
+  #           - "0 0 * * *" (daily at midnight)
+  #           - "0 */6 * * *" (every 6 hours)
+  #           - "0 0 * * 0" (weekly on Sunday)
+  #           - "0 0 1 * *" (monthly on the 1st)
+  #           Reference: https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/#cron-schedule-syntax
   schedule: "0 0 * * *"  # Daily at midnight
+  
+  # timeZone: The timezone for the schedule.
+  #           If not specified, uses the controller's timezone.
+  #           Examples: "UTC", "America/New_York", "Europe/London"
+  #           Reference: https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/#time-zones
   timeZone: ""
+  
+  # concurrencyPolicy: How to handle concurrent executions of the CronJob.
+  #                    Options: "Allow", "Forbid", "Replace"
+  #                    - Allow: Allow concurrent executions (default)
+  #                    - Forbid: Skip new executions if previous ones are still running
+  #                    - Replace: Cancel the currently running job and start a new one
+  #                    Reference: https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/#concurrency-policy
   concurrencyPolicy: Allow
+  
+  # failedJobsHistoryLimit: The number of failed job executions to retain.
+  #                        Helps with debugging and monitoring.
+  #                        Reference: https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/#jobs-history-limits
   failedJobsHistoryLimit: 1
+  
+  # successfulJobsHistoryLimit: The number of successful job executions to retain.
+  #                            Helps with monitoring and auditing.
+  #                            Reference: https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/#jobs-history-limits
   successfulJobsHistoryLimit: 3
+  
+  # suspend: Whether to suspend the CronJob.
+  #          If true, no new jobs will be created until this is set to false.
+  #          Reference: https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/#suspending-a-cron-job
   suspend: false
+  
+  # activeDeadlineSeconds: The duration in seconds relative to the start time that the job may be active.
+  #                       If not specified, there is no deadline.
+  #                       Reference: https://kubernetes.io/docs/concepts/workloads/controllers/job/#job-termination-and-cleanup
   activeDeadlineSeconds: 0
+  
+  # backoffLimit: The number of retries before marking the job as failed.
+  #               Defaults to 6 if not specified.
+  #               Reference: https://kubernetes.io/docs/concepts/workloads/controllers/job/#pod-backoff-failure-policy
   backoffLimit: 6
+  
+  # ttlSecondsAfterFinished: The time in seconds after the job finishes before it is automatically deleted.
+  #                         If not specified, the job will not be automatically deleted.
+  #                         Reference: https://kubernetes.io/docs/concepts/workloads/controllers/job/#clean-up-finished-jobs-automatically
   ttlSecondsAfterFinished: 0
+  
+  # restartPolicy: The restart policy for the Pod.
+  #                Options: "Never", "OnFailure"
+  #                - Never: Never restart the Pod (default for Jobs)
+  #                - OnFailure: Restart the Pod only if it fails
+  #                Reference: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#restart-policy
   restartPolicy: OnFailure
+  
+  # Container image configuration
   image:
+    # repository: The container image repository (without tag).
     repository: nginx
+    
+    # tag: The image tag to use.
+    #      If empty, uses the chart's appVersion.
     tag: ""
+    
+    # pullPolicy: The image pull policy for the container.
+    #             Options: "Always", "IfNotPresent", "Never"
     pullPolicy: IfNotPresent
+  
+  # imagePullSecrets: List of secrets to use for pulling images from private registries.
   imagePullSecrets: []
+  
+  # command: The command to run in the container.
+  #          If not specified, uses the image's default command.
   command: []
+  
+  # args: The arguments to pass to the command.
+  #       If not specified, uses the image's default arguments.
   args: []
   env: []
   resources: {}
@@ -556,9 +1282,22 @@ cronJob:
   securityContext: {}
 
 # LimitRange configuration
+# LimitRange provides constraints that can:
+# - Enforce minimum and maximum compute resources usage per Pod or Container in a namespace
+# - Enforce minimum and maximum storage request per PersistentVolumeClaim in a namespace
+# - Set default request/limit for compute resources in a namespace and automatically inject them to Containers at runtime
+# Reference: https://kubernetes.io/docs/concepts/policy/limit-range/
 limitRange:
+  # enabled: Specifies whether the LimitRange should be created.
+  #          LimitRanges are useful for enforcing resource constraints at the namespace level.
   enabled: false
+  
+  # annotations: Annotations to add to the LimitRange metadata.
   annotations: {}
+  
+  # limits: List of limit specifications for different resource types.
+  #         Each limit can specify constraints for containers, pods, or persistent volume claims.
+  #         Reference: https://kubernetes.io/docs/concepts/policy/limit-range/#limitrange-resource
   limits: []
     # - type: Container
     #   max:
@@ -575,9 +1314,19 @@ limitRange:
     #     memory: 256Mi
 
 # ResourceQuota configuration
+# ResourceQuota provides constraints that limit aggregate resource consumption per namespace.
+# It can limit the quantity of objects that can be created in a namespace by type, as well as the total amount of compute resources that may be consumed by resources in that namespace.
+# Reference: https://kubernetes.io/docs/concepts/policy/resource-quotas/
 resourceQuota:
+  # enabled: Specifies whether the ResourceQuota should be created.
+  #          ResourceQuotas are useful for limiting resource consumption at the namespace level.
   enabled: false
+  
+  # annotations: Annotations to add to the ResourceQuota metadata.
   annotations: {}
+  
+  # hard: The set of desired hard limits for each named resource.
+  #       Reference: https://kubernetes.io/docs/concepts/policy/resource-quotas/#compute-resource-quota
   hard: {}
     # requests.cpu: "2"
     # requests.memory: 4Gi
@@ -586,24 +1335,76 @@ resourceQuota:
     # pods: "10"
     # services: "5"
     # persistentvolumeclaims: "4"
+  
+  # scopeSelector: A collection of filters like scopes that must match each object tracked by a quota.
+  #                Reference: https://kubernetes.io/docs/concepts/policy/resource-quotas/#quota-scopes
   scopeSelector: {}
+  
+  # scopes: A set of scopes that must match each object tracked by a quota.
+  #         Reference: https://kubernetes.io/docs/concepts/policy/resource-quotas/#quota-scopes
   scopes: []
 
 # Job configuration
+# Job creates one or more Pods and ensures that a specified number of them successfully terminate.
+# Reference: https://kubernetes.io/docs/concepts/workloads/controllers/job/
 job:
+  # enabled: Specifies whether the Job should be created.
+  #          Jobs are useful for batch processing, data migration, and one-time tasks.
   enabled: false
+  
+  # annotations: Annotations to add to the Job metadata.
   annotations: {}
+  
+  # activeDeadlineSeconds: The duration in seconds relative to the start time that the job may be active.
+  #                       If not specified, there is no deadline.
+  #                       Reference: https://kubernetes.io/docs/concepts/workloads/controllers/job/#job-termination-and-cleanup
   activeDeadlineSeconds: 0
+  
+  # backoffLimit: The number of retries before marking the job as failed.
+  #               Defaults to 6 if not specified.
+  #               Reference: https://kubernetes.io/docs/concepts/workloads/controllers/job/#pod-backoff-failure-policy
   backoffLimit: 6
+  
+  # completions: The desired number of successfully finished Pods.
+  #              If not specified, defaults to 1.
+  #              Reference: https://kubernetes.io/docs/concepts/workloads/controllers/job/#parallel-jobs
   completions: 1
+  
+  # parallelism: The maximum desired number of Pods the job should run at any given time.
+  #              If not specified, defaults to 1.
+  #              Reference: https://kubernetes.io/docs/concepts/workloads/controllers/job/#parallel-jobs
   parallelism: 1
+  
+  # ttlSecondsAfterFinished: The time in seconds after the job finishes before it is automatically deleted.
+  #                         If not specified, the job will not be automatically deleted.
+  #                         Reference: https://kubernetes.io/docs/concepts/workloads/controllers/job/#clean-up-finished-jobs-automatically
   ttlSecondsAfterFinished: 0
+  
+  # restartPolicy: The restart policy for the Pod.
+  #                Options: "Never", "OnFailure"
+  #                - Never: Never restart the Pod (default for Jobs)
+  #                - OnFailure: Restart the Pod only if it fails
+  #                Reference: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#restart-policy
   restartPolicy: Never
+  
+  # Container image configuration
   image:
+    # repository: The container image repository (without tag).
     repository: nginx
+    
+    # tag: The image tag to use.
+    #      If empty, uses the chart's appVersion.
     tag: ""
+    
+    # pullPolicy: The image pull policy for the container.
+    #             Options: "Always", "IfNotPresent", "Never"
     pullPolicy: IfNotPresent
+  
+  # imagePullSecrets: List of secrets to use for pulling images from private registries.
   imagePullSecrets: []
+  
+  # command: The command to run in the container.
+  #          If not specified, uses the image's default command.
   command: []
   args: []
   env: []
@@ -616,9 +1417,19 @@ job:
   securityContext: {}
 
 # MutatingWebhookConfiguration for admission control
+# MutatingWebhookConfiguration describes the configuration of and admission webhook that accept or reject and may change the object.
+# Reference: https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#mutating-admission-webhooks
 mutatingWebhookConfiguration:
+  # enabled: Specifies whether the MutatingWebhookConfiguration should be created.
+  #          Mutating webhooks can modify objects during admission.
   enabled: false
+  
+  # annotations: Annotations to add to the MutatingWebhookConfiguration metadata.
   annotations: {}
+  
+  # webhooks: List of webhook configurations.
+  #           Each webhook defines when and how to call the webhook service.
+  #           Reference: https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#webhook-configuration
   webhooks: []
     # - name: example-mutating-webhook
     #   clientConfig:
@@ -644,9 +1455,19 @@ mutatingWebhookConfiguration:
     #   reinvocationPolicy: IfNeeded
 
 # ValidatingWebhookConfiguration for admission control
+# ValidatingWebhookConfiguration describes the configuration of and admission webhook that accept or reject an object, but it may not change the object.
+# Reference: https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#validating-admission-webhooks
 validatingWebhookConfiguration:
+  # enabled: Specifies whether the ValidatingWebhookConfiguration should be created.
+  #          Validating webhooks can only accept or reject objects, they cannot modify them.
   enabled: false
+  
+  # annotations: Annotations to add to the ValidatingWebhookConfiguration metadata.
   annotations: {}
+  
+  # webhooks: List of webhook configurations.
+  #           Each webhook defines when and how to call the webhook service.
+  #           Reference: https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#webhook-configuration
   webhooks: []
     # - name: example-validating-webhook
     #   clientConfig:
@@ -671,17 +1492,37 @@ validatingWebhookConfiguration:
     #   admissionReviewVersions: ["v1"]
 
 # Istio Service Mesh configuration
+# Istio is an open platform to connect, manage, and secure microservices.
+# Reference: https://istio.io/latest/docs/
 istio:
+  # enabled: Specifies whether Istio service mesh resources should be created.
+  #          Requires Istio to be installed in the cluster.
   enabled: false
   
   # VirtualService configuration for traffic management
+  # VirtualService defines a set of traffic routing rules to apply when a host is addressed.
+  # Reference: https://istio.io/latest/docs/reference/config/networking/virtual-service/
   virtualService:
+    # enabled: Specifies whether the VirtualService should be created.
+    #          VirtualServices are used for traffic routing and load balancing.
     enabled: false
+    
+    # annotations: Annotations to add to the VirtualService metadata.
     annotations: {}
+    
+    # hosts: The destination hosts to which traffic is being sent.
+    #        Can be a DNS name with wildcard prefix or an IP address.
+    #        Reference: https://istio.io/latest/docs/reference/config/networking/virtual-service/#VirtualService
     hosts: []
       # - kairoscloud.example.com
+    
+    # gateways: The names of gateways and sidecars that should apply these routes.
+    #           Reference: https://istio.io/latest/docs/reference/config/networking/virtual-service/#VirtualService
     gateways: []
       # - kairoscloud-gateway
+    
+    # http: An ordered list of route rules for HTTP traffic.
+    #       Reference: https://istio.io/latest/docs/reference/config/networking/virtual-service/#HTTPRoute
     http: []
       # - match:
       #   - uri:
@@ -759,20 +1600,38 @@ istio:
       # - name: jaeger
 
 # KEDA (Kubernetes Event-Driven Autoscaling) configuration
+# KEDA is a Kubernetes-based Event Driven Autoscaler that allows you to scale any container based on the number of events needing to be processed.
+# Reference: https://keda.sh/docs/
 keda:
+  # enabled: Specifies whether the KEDA ScaledObject should be created.
+  #          Requires KEDA to be installed in the cluster.
   enabled: false
+  
+  # annotations: Annotations to add to the ScaledObject metadata.
   annotations: {}
-  # Minimum number of replicas (defaults to autoscaling.minReplicas if not set)
+  
+  # minReplicas: Minimum number of replicas (defaults to autoscaling.minReplicas if not set).
+  #              Reference: https://keda.sh/docs/concepts/scaling-deployments/#scaledobject-spec
   minReplicas: null
-  # Maximum number of replicas (defaults to autoscaling.maxReplicas if not set)
+  
+  # maxReplicas: Maximum number of replicas (defaults to autoscaling.maxReplicas if not set).
+  #              Reference: https://keda.sh/docs/concepts/scaling-deployments/#scaledobject-spec
   maxReplicas: null
-  # Polling interval for metrics (e.g., "30s", "1m")
+  
+  # pollingInterval: Polling interval for metrics (e.g., "30s", "1m").
+  #                  Reference: https://keda.sh/docs/concepts/scaling-deployments/#scaledobject-spec
   pollingInterval: null
-  # Cooldown period for scaling down (e.g., "300s", "5m")
+  
+  # cooldownPeriod: Cooldown period for scaling down (e.g., "300s", "5m").
+  #                 Reference: https://keda.sh/docs/concepts/scaling-deployments/#scaledobject-spec
   cooldownPeriod: null
-  # Number of replicas to maintain when idle (defaults to 0)
+  
+  # idleReplicaCount: Number of replicas to maintain when idle (defaults to 0).
+  #                   Reference: https://keda.sh/docs/concepts/scaling-deployments/#scaledobject-spec
   idleReplicaCount: null
-  # Advanced KEDA configuration
+  
+  # advanced: Advanced KEDA configuration for ScaledObject.
+  #           Reference: https://keda.sh/docs/concepts/scaling-deployments/#scaledobject-spec
   advanced: {}
     # horizontalPodAutoscalerConfig:
     #   behavior:
@@ -849,9 +1708,12 @@ keda:
     # replicas: 1
 
 # Chaos Mesh configuration for chaos engineering
-# When enabled, automatically installs Chaos Mesh as a dependency
-# and provides templates for various chaos experiments
+# Chaos Mesh is a cloud-native Chaos Engineering platform that orchestrates chaos on Kubernetes environments.
+# When enabled, automatically installs Chaos Mesh as a dependency and provides templates for various chaos experiments.
+# Reference: https://chaos-mesh.org/docs/
 chaosMesh:
+  # enabled: Specifies whether Chaos Mesh should be installed and configured.
+  #          Chaos Mesh provides chaos engineering capabilities for testing system resilience.
   enabled: false
   
   # Chaos Mesh dependency configuration
@@ -863,22 +1725,22 @@ chaosMesh:
       replicas: 1
       # Enable webhook for admission control
       webhook:
-        enabled: true
+        enabled: false
     # Chaos Mesh daemon configuration  
     chaosDaemon:
-      enabled: true
+      enabled: false
     # Chaos Mesh dashboard configuration
     dashboard:
-      enabled: true
+      enabled: false
       # Enable ingress for dashboard access
       ingress:
         enabled: false
     # Chaos Mesh DNS server configuration
     dnsServer:
-      enabled: true
+      enabled: false
     # Chaos Mesh chaosfs configuration
     chaosfs:
-      enabled: true
+      enabled: false
 
   # Example chaos experiments configuration
   # These are example configurations for different chaos types

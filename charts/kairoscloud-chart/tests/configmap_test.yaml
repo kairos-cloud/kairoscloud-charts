@@ -4,6 +4,9 @@ templates:
   - core/configmap.yaml
 tests:
   - it: should create configmap with default values
+    set:
+      configMap:
+        enabled: true
     asserts:
       - isKind:
           of: ConfigMap
