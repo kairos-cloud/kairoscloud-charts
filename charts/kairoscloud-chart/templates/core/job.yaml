@@ -43,7 +43,7 @@ spec:
       containers:
         - name: {{ .Chart.Name }}-job
           image: "{{ .Values.job.image.repository }}:{{ .Values.job.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.job.image.pullPolicy | default .Values.image.pullPolicy }}
+          imagePullPolicy: {{ .Values.job.image.pullPolicy | default .Values.deployment.image.pullPolicy }}
           {{- if .Values.job.command }}
           command:
             {{- toYaml .Values.job.command | nindent 12 }}

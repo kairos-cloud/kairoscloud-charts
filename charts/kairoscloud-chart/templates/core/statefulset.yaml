@@ -8,7 +8,7 @@ metadata:
 spec:
   serviceName: {{ .Values.statefulset.serviceName | default (printf "%s-headless" (include "kairoscloud-chart.fullname" .)) }}
   {{- if not .Values.keda.enabled }}
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ .Values.statefulset.replicaCount }}
   {{- end }}
   podManagementPolicy: {{ .Values.statefulset.podManagementPolicy }}
   updateStrategy:
@@ -18,73 +18,73 @@ spec:
       {{- include "kairoscloud-chart.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
+      {{- with .Values.statefulset.podAnnotations }}
       annotations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
         {{- include "kairoscloud-chart.selectorLabels" . | nindent 8 }}
     spec:
-      {{- with .Values.imagePullSecrets }}
+      {{- with .Values.statefulset.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "kairoscloud-chart.serviceAccountName" . }}
       securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+        {{- toYaml .Values.statefulset.podSecurityContext | nindent 8 }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+            {{- toYaml .Values.statefulset.securityContext | nindent 12 }}
+          image: "{{ .Values.statefulset.image.repository }}:{{ .Values.statefulset.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.statefulset.image.pullPolicy }}
           ports:
             - name: http
               containerPort: {{ .Values.service.targetPort }}
               protocol: TCP
-          {{- if .Values.livenessProbe.enabled }}
+          {{- if .Values.statefulset.livenessProbe.enabled }}
           livenessProbe:
-            {{- toYaml .Values.livenessProbe | nindent 12 }}
+            {{- toYaml .Values.statefulset.livenessProbe | nindent 12 }}
           {{- end }}
-          {{- if .Values.readinessProbe.enabled }}
+          {{- if .Values.statefulset.readinessProbe.enabled }}
           readinessProbe:
-            {{- toYaml .Values.readinessProbe | nindent 12 }}
+            {{- toYaml .Values.statefulset.readinessProbe | nindent 12 }}
           {{- end }}
-          {{- if .Values.startupProbe.enabled }}
+          {{- if .Values.statefulset.startupProbe.enabled }}
           startupProbe:
-            {{- toYaml .Values.startupProbe | nindent 12 }}
+            {{- toYaml .Values.statefulset.startupProbe | nindent 12 }}
           {{- end }}
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
-          {{- if .Values.env }}
+            {{- toYaml .Values.statefulset.resources | nindent 12 }}
+          {{- if .Values.statefulset.env }}
           env:
-            {{- toYaml .Values.env | nindent 12 }}
+            {{- toYaml .Values.statefulset.env | nindent 12 }}
           {{- end }}
-          {{- if or .Values.extraVolumeMounts .Values.persistence.enabled }}
+          {{- if or .Values.statefulset.extraVolumeMounts .Values.persistence.enabled }}
           volumeMounts:
-            {{- if .Values.extraVolumeMounts }}
-            {{- toYaml .Values.extraVolumeMounts | nindent 12 }}
+            {{- if .Values.statefulset.extraVolumeMounts }}
+            {{- toYaml .Values.statefulset.extraVolumeMounts | nindent 12 }}
             {{- end }}
             {{- if .Values.persistence.enabled }}
             - name: data
               mountPath: /data
             {{- end }}
           {{- end }}
-      {{- if or .Values.extraVolumes .Values.persistence.enabled }}
+      {{- if or .Values.statefulset.extraVolumes .Values.persistence.enabled }}
       volumes:
-        {{- if .Values.extraVolumes }}
-        {{- toYaml .Values.extraVolumes | nindent 8 }}
+        {{- if .Values.statefulset.extraVolumes }}
+        {{- toYaml .Values.statefulset.extraVolumes | nindent 8 }}
         {{- end }}
       {{- end }}
-      {{- with .Values.nodeSelector }}
+      {{- with .Values.statefulset.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.affinity }}
+      {{- with .Values.statefulset.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.tolerations }}
+      {{- with .Values.statefulset.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
