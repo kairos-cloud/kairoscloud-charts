@@ -1532,15 +1532,46 @@ istio:
       #       host: kairoscloud-chart
       #       port:
       #         number: 80
+    
+    # tcp: An ordered list of route rules for TCP traffic.
+    #      TCP routing is used for non-HTTP protocols like database connections.
+    #      Reference: https://istio.io/latest/docs/reference/config/networking/virtual-service/#TCPRoute
     tcp: []
+    
+    # tls: An ordered list of route rules for TLS traffic.
+    #      TLS routing is used for HTTPS traffic and other TLS-encrypted protocols.
+    #      Reference: https://istio.io/latest/docs/reference/config/networking/virtual-service/#TLSRoute
     tls: []
     
   # AuthorizationPolicy configuration for access control
+  # AuthorizationPolicy enables access control on workloads in the mesh.
+  # Reference: https://istio.io/latest/docs/reference/config/security/authorization-policy/
   authorizationPolicy:
+    # enabled: Specifies whether the AuthorizationPolicy should be created.
+    #          AuthorizationPolicy provides fine-grained access control for services.
+    #          Reference: https://istio.io/latest/docs/reference/config/security/authorization-policy/
     enabled: false
+    
+    # annotations: Annotations to add to the AuthorizationPolicy metadata.
     annotations: {}
+    
+    # action: The action to take if the request matches the rules.
+    #         Options: "ALLOW", "DENY", "AUDIT", "CUSTOM"
+    #         - ALLOW: Allow the request (default)
+    #         - DENY: Deny the request
+    #         - AUDIT: Audit the request without affecting the decision
+    #         - CUSTOM: Use custom authorization provider
+    #         Reference: https://istio.io/latest/docs/reference/config/security/authorization-policy/#AuthorizationPolicy
     action: ALLOW
+    
+    # selector: The selector specifies the workloads to apply the authorization policy to.
+    #           If not set, the policy applies to all workloads in the same namespace.
+    #           Reference: https://istio.io/latest/docs/reference/config/security/authorization-policy/#AuthorizationPolicy
     selector: {}
+    
+    # rules: A list of rules to match the request.
+    #        Rules are evaluated in order, and the first matching rule determines the action.
+    #        Reference: https://istio.io/latest/docs/reference/config/security/authorization-policy/#Rule
     rules: []
       # - from:
       #   - source:
@@ -1550,32 +1581,86 @@ istio:
       #       methods: ["GET"]
     
   # PeerAuthentication configuration for mTLS
+  # PeerAuthentication defines the mutual TLS settings for workloads.
+  # Reference: https://istio.io/latest/docs/reference/config/security/peer_authentication/
   peerAuthentication:
+    # enabled: Specifies whether the PeerAuthentication should be created.
+    #          PeerAuthentication configures mutual TLS settings for workloads.
+    #          Reference: https://istio.io/latest/docs/reference/config/security/peer_authentication/
     enabled: false
+    
+    # annotations: Annotations to add to the PeerAuthentication metadata.
     annotations: {}
+    
+    # selector: The selector specifies the workloads to apply the peer authentication policy to.
+    #           If not set, the policy applies to all workloads in the same namespace.
+    #           Reference: https://istio.io/latest/docs/reference/config/security/peer_authentication/#PeerAuthentication
     selector: {}
+    
+    # mtls: Configuration for mutual TLS mode.
+    #       Reference: https://istio.io/latest/docs/reference/config/security/peer_authentication/#PeerAuthentication
     mtls:
+      # mode: The mutual TLS mode for the workload.
+      #       Options: "STRICT", "PERMISSIVE", "DISABLE"
+      #       - STRICT: Enforce mutual TLS for all connections
+      #       - PERMISSIVE: Allow both mutual TLS and plain text connections
+      #       - DISABLE: Disable mutual TLS
+      #       Reference: https://istio.io/latest/docs/reference/config/security/peer_authentication/#PeerAuthentication
       mode: STRICT
+    
+    # portLevelMtls: Port-specific mutual TLS configuration.
+    #                Overrides the global mtls.mode for specific ports.
+    #                Reference: https://istio.io/latest/docs/reference/config/security/peer_authentication/#PeerAuthentication
     portLevelMtls: {}
       # 8080:
       #   mode: DISABLE
     
   # RequestAuthentication configuration for JWT authentication
+  # RequestAuthentication defines what request authentication methods are supported by a workload.
+  # Reference: https://istio.io/latest/docs/reference/config/security/request_authentication/
   requestAuthentication:
+    # enabled: Specifies whether the RequestAuthentication should be created.
+    #          RequestAuthentication configures JWT authentication for workloads.
+    #          Reference: https://istio.io/latest/docs/reference/config/security/request_authentication/
     enabled: false
+    
+    # annotations: Annotations to add to the RequestAuthentication metadata.
     annotations: {}
+    
+    # selector: The selector specifies the workloads to apply the request authentication policy to.
+    #           If not set, the policy applies to all workloads in the same namespace.
+    #           Reference: https://istio.io/latest/docs/reference/config/security/request_authentication/#RequestAuthentication
     selector: {}
+    
+    # jwtRules: A list of JWT authentication rules.
+    #           Each rule specifies how to validate JWT tokens.
+    #           Reference: https://istio.io/latest/docs/reference/config/security/request_authentication/#RequestAuthentication
     jwtRules: []
       # - issuer: "https://example.com"
       #   jwksUri: "https://example.com/.well-known/jwks.json"
       #   audiences: ["api"]
     
   # Gateway configuration for ingress/egress
+  # Gateway describes a load balancer operating at the edge of the mesh receiving incoming or outgoing HTTP/TCP connections.
+  # Reference: https://istio.io/latest/docs/reference/config/networking/gateway/
   gateway:
+    # enabled: Specifies whether the Gateway should be created.
+    #          Gateway provides ingress and egress capabilities for the service mesh.
+    #          Reference: https://istio.io/latest/docs/reference/config/networking/gateway/
     enabled: false
+    
+    # annotations: Annotations to add to the Gateway metadata.
     annotations: {}
+    
+    # selector: The selector specifies the pods that should act as the gateway.
+    #           Common selectors include "istio: ingressgateway" for ingress traffic.
+    #           Reference: https://istio.io/latest/docs/reference/config/networking/gateway/#Gateway
     selector: {}
       # istio: ingressgateway
+    
+    # servers: A list of server specifications for the gateway.
+    #          Each server defines the ports and protocols that the gateway will handle.
+    #          Reference: https://istio.io/latest/docs/reference/config/networking/gateway/#Server
     servers: []
       # - port:
       #     number: 80
@@ -1585,16 +1670,39 @@ istio:
       #   - kairoscloud.example.com
     
   # Telemetry configuration for observability
+  # Telemetry defines how telemetry data (metrics, logs, traces) is generated and collected.
+  # Reference: https://istio.io/latest/docs/reference/config/telemetry/
   telemetry:
+    # enabled: Specifies whether the Telemetry should be created.
+    #          Telemetry configures observability features for workloads.
+    #          Reference: https://istio.io/latest/docs/reference/config/telemetry/
     enabled: false
+    
+    # annotations: Annotations to add to the Telemetry metadata.
     annotations: {}
+    
+    # selector: The selector specifies the workloads to apply the telemetry configuration to.
+    #           If not set, the configuration applies to all workloads in the same namespace.
+    #           Reference: https://istio.io/latest/docs/reference/config/telemetry/#Telemetry
     selector: {}
+    
+    # metrics: Configuration for metrics collection.
+    #          Defines which metrics providers to use and how to collect metrics.
+    #          Reference: https://istio.io/latest/docs/reference/config/telemetry/#Telemetry
     metrics: []
       # - providers:
       #   - name: prometheus
+    
+    # accessLogging: Configuration for access log collection.
+    #                Defines which access log providers to use and how to collect logs.
+    #                Reference: https://istio.io/latest/docs/reference/config/telemetry/#Telemetry
     accessLogging: []
       # - providers:
       #   - name: otel
+    
+    # tracing: Configuration for distributed tracing.
+    #          Defines which tracing providers to use and how to collect traces.
+    #          Reference: https://istio.io/latest/docs/reference/config/telemetry/#Telemetry
     tracing: {}
       # providers:
       # - name: jaeger
@@ -1721,25 +1829,71 @@ chaosMesh:
   # See: https://charts.chaos-mesh.org for full configuration options
   chaos-mesh:
     # Chaos Mesh controller configuration
+    # controllerManager: Configuration for the Chaos Mesh controller manager component.
+    #                    The controller manager is responsible for managing chaos experiments.
+    #                    Reference: https://chaos-mesh.org/docs/architecture/overview/#controller-manager
     controllerManager:
+      # replicas: Number of controller manager replicas to run.
+      #           For high availability, set to 2 or more.
+      #           Reference: https://chaos-mesh.org/docs/architecture/overview/#controller-manager
       replicas: 1
-      # Enable webhook for admission control
+      
+      # webhook: Configuration for the Chaos Mesh admission webhook.
+      #          The webhook validates and mutates chaos experiment resources.
+      #          Reference: https://chaos-mesh.org/docs/architecture/overview/#admission-webhook
       webhook:
+        # enabled: Specifies whether the admission webhook should be enabled.
+        #          The webhook is required for validating chaos experiment configurations.
+        #          Reference: https://chaos-mesh.org/docs/architecture/overview/#admission-webhook
         enabled: false
-    # Chaos Mesh daemon configuration  
+    
+    # Chaos Mesh daemon configuration
+    # chaosDaemon: Configuration for the Chaos Mesh daemon component.
+    #              The daemon runs on each node and executes chaos experiments.
+    #              Reference: https://chaos-mesh.org/docs/architecture/overview/#chaos-daemon
     chaosDaemon:
+      # enabled: Specifies whether the Chaos Mesh daemon should be enabled.
+      #          The daemon is required for executing chaos experiments on nodes.
+      #          Reference: https://chaos-mesh.org/docs/architecture/overview/#chaos-daemon
       enabled: false
+    
     # Chaos Mesh dashboard configuration
+    # dashboard: Configuration for the Chaos Mesh web dashboard.
+    #            The dashboard provides a web UI for managing chaos experiments.
+    #            Reference: https://chaos-mesh.org/docs/architecture/overview/#dashboard
     dashboard:
+      # enabled: Specifies whether the Chaos Mesh dashboard should be enabled.
+      #          The dashboard provides a web interface for chaos experiment management.
+      #          Reference: https://chaos-mesh.org/docs/architecture/overview/#dashboard
       enabled: false
-      # Enable ingress for dashboard access
+      
+      # ingress: Configuration for exposing the dashboard via Ingress.
+      #          This allows external access to the Chaos Mesh dashboard.
+      #          Reference: https://chaos-mesh.org/docs/architecture/overview/#dashboard
       ingress:
+        # enabled: Specifies whether to create an Ingress for the dashboard.
+        #          Requires an Ingress controller to be installed in the cluster.
+        #          Reference: https://chaos-mesh.org/docs/architecture/overview/#dashboard
         enabled: false
+    
     # Chaos Mesh DNS server configuration
+    # dnsServer: Configuration for the Chaos Mesh DNS server component.
+    #            The DNS server is used for DNS chaos experiments.
+    #            Reference: https://chaos-mesh.org/docs/architecture/overview/#dns-server
     dnsServer:
+      # enabled: Specifies whether the Chaos Mesh DNS server should be enabled.
+      #          Required for DNS chaos experiments.
+      #          Reference: https://chaos-mesh.org/docs/architecture/overview/#dns-server
       enabled: false
+    
     # Chaos Mesh chaosfs configuration
+    # chaosfs: Configuration for the Chaos Mesh chaosfs component.
+    #          The chaosfs is used for file system chaos experiments.
+    #          Reference: https://chaos-mesh.org/docs/architecture/overview/#chaosfs
     chaosfs:
+      # enabled: Specifies whether the Chaos Mesh chaosfs should be enabled.
+      #          Required for file system chaos experiments.
+      #          Reference: https://chaos-mesh.org/docs/architecture/overview/#chaosfs
       enabled: false
 
   # Example chaos experiments configuration
