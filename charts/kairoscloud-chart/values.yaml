@@ -540,6 +540,61 @@ job:
   tolerations: []
   securityContext: {}
 
+# MutatingWebhookConfiguration for admission control
+mutatingWebhookConfiguration:
+  enabled: false
+  annotations: {}
+  webhooks: []
+    # - name: example-mutating-webhook
+    #   clientConfig:
+    #     service:
+    #       name: webhook-service
+    #       namespace: default
+    #       path: /mutate
+    #       port: 443
+    #     caBundle: ""  # Base64-encoded CA certificate
+    #   rules:
+    #     - operations: ["CREATE", "UPDATE"]
+    #       apiGroups: [""]
+    #       apiVersions: ["v1"]
+    #       resources: ["pods"]
+    #       scope: "Namespaced"
+    #   failurePolicy: Fail
+    #   matchPolicy: Equivalent
+    #   namespaceSelector: {}
+    #   objectSelector: {}
+    #   sideEffects: None
+    #   timeoutSeconds: 10
+    #   admissionReviewVersions: ["v1"]
+    #   reinvocationPolicy: IfNeeded
+
+# ValidatingWebhookConfiguration for admission control
+validatingWebhookConfiguration:
+  enabled: false
+  annotations: {}
+  webhooks: []
+    # - name: example-validating-webhook
+    #   clientConfig:
+    #     service:
+    #       name: webhook-service
+    #       namespace: default
+    #       path: /validate
+    #       port: 443
+    #     caBundle: ""  # Base64-encoded CA certificate
+    #   rules:
+    #     - operations: ["CREATE", "UPDATE"]
+    #       apiGroups: [""]
+    #       apiVersions: ["v1"]
+    #       resources: ["pods"]
+    #       scope: "Namespaced"
+    #   failurePolicy: Fail
+    #   matchPolicy: Equivalent
+    #   namespaceSelector: {}
+    #   objectSelector: {}
+    #   sideEffects: None
+    #   timeoutSeconds: 10
+    #   admissionReviewVersions: ["v1"]
+
 # Istio Service Mesh configuration
 istio:
   enabled: false
