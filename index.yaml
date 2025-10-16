@@ -3,6 +3,25 @@ entries:
   kairoscloud-chart:
   - apiVersion: v2
     appVersion: 1.0.0
+    created: "2025-10-16T20:33:34.631741984Z"
+    description: A Helm chart for KairosCloud application
+    digest: 8f25ed39e568216228a5a3d842aec6eddbe05a80039cab0192b20cda37bd1ffc
+    home: https://github.com/KairosCloud/kairoscloud-charts
+    keywords:
+    - kairoscloud
+    - application
+    maintainers:
+    - email: team@kairoscloud.com
+      name: KairosCloud Team
+    name: kairoscloud-chart
+    sources:
+    - https://github.com/KairosCloud/kairoscloud-charts
+    type: application
+    urls:
+    - https://github.com/kairos-cloud/kairoscloud-charts/releases/download/kairoscloud-chart-0.1.1/kairoscloud-chart-0.1.1.tgz
+    version: 0.1.1
+  - apiVersion: v2
+    appVersion: 1.0.0
     created: "2025-10-16T19:38:29.820458778Z"
     description: A Helm chart for KairosCloud application
     digest: f7079a0f09572b9c8977a8e93c3de7ebe6712960aecd9385eff22f4603c695bc
@@ -20,4 +39,4 @@ entries:
     urls:
     - https://github.com/kairos-cloud/kairoscloud-charts/releases/download/kairoscloud-chart-0.1.0/kairoscloud-chart-0.1.0.tgz
     version: 0.1.0
-generated: "2025-10-16T19:38:29.820467293Z"
+generated: "2025-10-16T20:33:34.631755259Z"
