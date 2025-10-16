@@ -309,6 +309,50 @@ tests:
           path: spec.template.spec.initContainers[1].image
           value: alpine:3.18
 
+  - it: should create daemonset with default empty podSecurityContext
+    set:
+      deployment:
+        enabled: false
+      statefulset:
+        enabled: false
+      daemonset:
+        enabled: true
+        image:
+          repository: nginx
+    asserts:
+      - isKind:
+          of: DaemonSet
+      - equal:
+          path: spec.template.spec.securityContext
+          value: {}
+
+  - it: should create daemonset with explicit podSecurityContext configuration
+    set:
+      deployment:
+        enabled: false
+      statefulset:
+        enabled: false
+      daemonset:
+        enabled: true
+        image:
+          repository: nginx
+        podSecurityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          fsGroup: 2000
+    asserts:
+      - isKind:
+          of: DaemonSet
+      - equal:
+          path: spec.template.spec.securityContext.runAsNonRoot
+          value: true
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 1000
+      - equal:
+          path: spec.template.spec.securityContext.fsGroup
+          value: 2000
+
   - it: should not create daemonset when disabled
     set:
       deployment:

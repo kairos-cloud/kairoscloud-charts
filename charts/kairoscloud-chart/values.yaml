@@ -23,10 +23,7 @@ serviceAccount:
   create: true
   
   # annotations: Annotations to add to the ServiceAccount metadata.
-  #              Common annotations include:
-  #              - eks.amazonaws.com/role-arn: For AWS IAM roles (EKS)
-  #              - iam.gke.io/gcp-service-account: For GCP service accounts (GKE)
-  #              - azure.workload.identity/client-id: For Azure managed identity
+  #              Common annotations include IAM roles for cloud providers.
   annotations: {}
   
   # name: The name of the ServiceAccount to use.
@@ -54,8 +51,8 @@ deployment:
   #           Reference: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
   strategy:
     # type: The deployment strategy type. Can be "RollingUpdate" or "Recreate".
-    #       - RollingUpdate: Gradually replaces old Pods with new ones (default, zero-downtime)
-    #       - Recreate: Terminates all old Pods before creating new ones (downtime required)
+    #       RollingUpdate gradually replaces old Pods with new ones (default, zero-downtime).
+    #       Recreate terminates all old Pods before creating new ones (downtime required).
     type: RollingUpdate
     
     # rollingUpdate: Configuration for RollingUpdate strategy (ignored for Recreate).
@@ -97,9 +94,9 @@ deployment:
     
     # pullPolicy: The image pull policy for the container.
     #             Options: "Always", "IfNotPresent", "Never"
-    #             - Always: Always pull the image (useful for latest tags)
-    #             - IfNotPresent: Pull only if not present locally (default, recommended)
-    #             - Never: Never pull the image (assumes image is already present)
+    #             Always pulls the image (useful for latest tags).
+    #             IfNotPresent pulls only if not present locally (default, recommended).
+    #             Never assumes image is already present.
     #             Reference: https://kubernetes.io/docs/concepts/containers/images/#updating-images
     pullPolicy: IfNotPresent
     
@@ -114,21 +111,14 @@ deployment:
   imagePullSecrets: []
   
   # podAnnotations: Annotations to add to the Pod metadata.
-  #                 Common annotations include:
-  #                 - prometheus.io/scrape: "true" (for Prometheus scraping)
-  #                 - prometheus.io/port: "8080" (metrics port)
-  #                 - prometheus.io/path: "/metrics" (metrics path)
-  #                 - sidecar.istio.io/inject: "true" (for Istio sidecar injection)
+  #                 Common annotations include Prometheus scraping and Istio sidecar injection.
   podAnnotations: {}
   
   # podSecurityContext: Security context for the Pod.
   #                     Applies to all containers in the Pod.
   #                     Reference: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
-  podSecurityContext:
-    # fsGroup: A special supplemental group that applies to all containers in the Pod.
-    #          The ownership of any volumes mounted to the Pod will be changed to this group.
-    #          This is useful for shared storage scenarios.
-    fsGroup: 2000
+  #                     Default is empty to avoid unexpected behavior with fsGroup.
+  podSecurityContext: {}
   
   # securityContext: Security context for the main container.
   #                  Reference: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
@@ -306,10 +296,10 @@ deployment:
 service:
   # type: The type of Service to create.
   #       Options: "ClusterIP", "NodePort", "LoadBalancer", "ExternalName"
-  #       - ClusterIP: Exposes the service on a cluster-internal IP (default)
-  #       - NodePort: Exposes the service on each Node's IP at a static port
-  #       - LoadBalancer: Exposes the service externally using a cloud provider's load balancer
-  #       - ExternalName: Maps the service to the contents of the externalName field
+  #       ClusterIP exposes the service on a cluster-internal IP (default).
+  #       NodePort exposes the service on each Node's IP at a static port.
+  #       LoadBalancer exposes the service externally using a cloud provider's load balancer.
+  #       ExternalName maps the service to the contents of the externalName field.
   #       Reference: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
   type: ClusterIP
   
@@ -322,17 +312,14 @@ service:
   targetPort: 8080
   
   # annotations: Annotations to add to the Service metadata.
-  #              Common annotations include:
-  #              - service.beta.kubernetes.io/aws-load-balancer-type: "nlb" (for AWS NLB)
-  #              - cloud.google.com/load-balancer-type: "Internal" (for GCP internal LB)
-  #              - service.beta.kubernetes.io/azure-load-balancer-internal: "true" (for Azure internal LB)
+  #              Common annotations include cloud provider load balancer configurations.
   annotations: {}
   
   # Service session affinity
   # sessionAffinity: Controls how client IPs are distributed to backend Pods.
   #                  Options: "None", "ClientIP"
-  #                  - None: No session affinity (default)
-  #                  - ClientIP: All requests from the same client IP go to the same Pod
+  #                  None means no session affinity (default).
+  #                  ClientIP means all requests from the same client IP go to the same Pod.
   #                  Reference: https://kubernetes.io/docs/concepts/services-networking/service/#virtual-ips-and-service-proxies
   sessionAffinity: None
   
@@ -348,8 +335,8 @@ service:
   # LoadBalancer and NodePort specific settings
   # externalTrafficPolicy: Specifies how external traffic is routed to backend Pods.
   #                        Options: "Cluster", "Local"
-  #                        - Cluster: Traffic can be routed to any Pod in the cluster (default)
-  #                        - Local: Traffic is only routed to Pods on the same node as the service
+  #                        Cluster means traffic can be routed to any Pod in the cluster (default).
+  #                        Local means traffic is only routed to Pods on the same node as the service.
   #                        Only applies to LoadBalancer and NodePort services.
   #                        Reference: https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
   externalTrafficPolicy: Cluster
@@ -368,9 +355,9 @@ service:
   
   # ipFamilyPolicy: The IP family policy for the service.
   #                 Options: "SingleStack", "PreferDualStack", "RequireDualStack"
-  #                 - SingleStack: Only one IP family (default)
-  #                 - PreferDualStack: Prefer dual stack, fallback to single stack
-  #                 - RequireDualStack: Require dual stack, fail if not available
+  #                 SingleStack means only one IP family (default).
+  #                 PreferDualStack means prefer dual stack, fallback to single stack.
+  #                 RequireDualStack means require dual stack, fail if not available.
   #                 Reference: https://kubernetes.io/docs/concepts/services-networking/dual-stack/
   ipFamilyPolicy: SingleStack
 
@@ -388,15 +375,8 @@ ingress:
   className: ""
   
   # annotations: Annotations to add to the Ingress metadata.
-  #              Common annotations include:
-  #              - kubernetes.io/ingress.class: "nginx" (deprecated, use className instead)
-  #              - cert-manager.io/cluster-issuer: "letsencrypt-prod" (for automatic TLS)
-  #              - nginx.ingress.kubernetes.io/ssl-redirect: "true" (force HTTPS)
-  #              - nginx.ingress.kubernetes.io/rewrite-target: "/" (URL rewriting)
-  #              - alb.ingress.kubernetes.io/scheme: "internet-facing" (for AWS ALB)
+  #              Common annotations include ingress class, TLS certificates, and URL rewriting.
   annotations: {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
   
   # hosts: List of hosts and paths for the Ingress.
   #        Each host can have multiple paths with different path types.
@@ -408,9 +388,9 @@ ingress:
         - path: /
           # pathType: How the path should be matched.
           #           Options: "Exact", "Prefix", "ImplementationSpecific"
-          #           - Exact: Exact string match
-          #           - Prefix: Prefix match (most common)
-          #           - ImplementationSpecific: Depends on the IngressClass
+          #           Exact means exact string match.
+          #           Prefix means prefix match (most common).
+          #           ImplementationSpecific means depends on the IngressClass.
           #           Reference: https://kubernetes.io/docs/concepts/services-networking/ingress/#path-types
           pathType: Prefix
   
@@ -419,9 +399,6 @@ ingress:
   #      The secret should contain the TLS certificate and private key.
   #      Reference: https://kubernetes.io/docs/concepts/services-networking/ingress/#tls
   tls: []
-    #  - secretName: chart-example-tls
-    #    hosts:
-    #      - chart-example.local
 
 # Autoscaling configuration
 # HorizontalPodAutoscaler automatically scales the number of Pods based on observed metrics.
@@ -465,8 +442,8 @@ statefulset:
   
   # podManagementPolicy: Controls how Pods are created, updated, and deleted.
   #                      Options: "OrderedReady", "Parallel"
-  #                      - OrderedReady: Pods are created, updated, and deleted in order (default)
-  #                      - Parallel: Pods are created, updated, and deleted in parallel
+  #                      OrderedReady means Pods are created, updated, and deleted in order (default).
+  #                      Parallel means Pods are created, updated, and deleted in parallel.
   #                      Reference: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#pod-management-policies
   podManagementPolicy: OrderedReady
   
@@ -474,8 +451,8 @@ statefulset:
   #                 Reference: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies
   updateStrategy:
     # type: The update strategy type. Can be "RollingUpdate" or "OnDelete".
-    #       - RollingUpdate: Pods are updated in order (default)
-    #       - OnDelete: Pods are only updated when manually deleted
+    #       RollingUpdate means Pods are updated in order (default).
+    #       OnDelete means Pods are only updated when manually deleted.
     type: RollingUpdate
   
   # Pod configuration (similar to deployment)
@@ -487,85 +464,186 @@ statefulset:
     # Overrides the image tag whose default is the chart appVersion.
     tag: ""
   
+  # imagePullSecrets: List of secrets to use for pulling images from private registries.
+  #                   Each secret must contain credentials for the registry.
+  #                   Reference: https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
   imagePullSecrets: []
   
+  # podAnnotations: Annotations to add to the Pod metadata.
+  #                 Common annotations include Prometheus scraping and Istio sidecar injection.
   podAnnotations: {}
   
-  podSecurityContext:
-    fsGroup: 2000
+  # podSecurityContext: Security context for the Pod.
+  #                     Applies to all containers in the Pod.
+  #                     Reference: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+  #                     Default is empty to avoid unexpected behavior with fsGroup.
+  podSecurityContext: {}
   
+  # securityContext: Security context for the main container.
+  #                  Reference: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
   securityContext:
+    # capabilities: Linux capabilities to add or drop from the container.
+    #               Reference: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-capabilities-for-a-container
     capabilities:
+      # drop: List of capabilities to drop from the container.
+      #       "ALL" drops all capabilities, providing maximum security.
       drop:
       - ALL
+    
+    # readOnlyRootFilesystem: Whether the container's root filesystem should be read-only.
+    #                         This prevents the container from writing to the root filesystem,
+    #                         improving security but may require additional volumes for writable directories.
     readOnlyRootFilesystem: true
+    
+    # runAsNonRoot: Indicates that the container must run as a non-root user.
+    #               This is a security best practice to prevent privilege escalation.
     runAsNonRoot: true
+    
+    # runAsUser: The UID to run the container process as.
+    #            Must be a non-root user when runAsNonRoot is true.
     runAsUser: 1000
   
+  # resources: Resource requests and limits for the container.
+  #            Reference: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+  #            We usually recommend not to specify default resources and to leave this as a conscious
+  #            choice for the user. This also increases chances charts run on environments with little
+  #            resources, such as Minikube. If you do want to specify resources, uncomment the following
+  #            lines, adjust them as necessary, and remove the curly braces after 'resources:'.
   resources:
-    # We usually recommend not to specify default resources and to leave this as a conscious
-    # choice for the user. This also increases chances charts run on environments with little
-    # resources, such as Minikube. If you do want to specify resources, uncomment the following
-    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits: Maximum amount of resources the container can use.
+    #         If the container exceeds these limits, it may be terminated.
+    #         CPU: Can be specified in cores (1, 2) or millicores (1000m, 2000m)
+    #         Memory: Can be specified in bytes (1Gi, 512Mi) or decimal (1.5Gi)
+    #         Reference: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#requests-and-limits
     limits:
       cpu: 500m
       memory: 512Mi
+    
+    # requests: Amount of resources the container requests.
+    #           Kubernetes will schedule the Pod on a node that can provide these resources.
+    #           If not specified, defaults to the limits values.
+    #           Reference: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#requests-and-limits
     requests:
       cpu: 250m
       memory: 256Mi
   
+  # nodeSelector: Node selection constraints for Pod scheduling.
+  #               Pods will only be scheduled on nodes that have the specified labels.
+  #               Reference: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
   nodeSelector: {}
   
+  # tolerations: List of tolerations for tainted nodes.
+  #              Allows Pods to be scheduled on nodes with matching taints.
+  #              Reference: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
   tolerations: []
   
+  # affinity: Advanced scheduling constraints for Pod placement.
+  #           Includes node affinity, pod affinity, and pod anti-affinity rules.
+  #           Reference: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
   affinity: {}
   
   # Additional environment variables
+  # env: List of environment variables to pass to the container.
+  #      Each variable can have a name and value, or reference a Secret/ConfigMap.
+  #      Reference: https://kubernetes.io/docs/tasks/inject-data-application/define-environment-variable-container/
   env: []
-    # - name: ENV_VAR_NAME
-    #   value: "value"
   
   # Additional volumes
+  # extraVolumes: List of additional volumes to mount to the Pod.
+  #               Common volume types include ConfigMap, Secret, PersistentVolumeClaim, etc.
+  #               Reference: https://kubernetes.io/docs/concepts/storage/volumes/
   extraVolumes: []
-    # - name: extra-volume
-    #   configMap:
-    #     name: extra-config
   
   # Additional volume mounts
+  # extraVolumeMounts: List of volume mounts for the main container.
+  #                    These volumes must be defined in extraVolumes.
+  #                    Reference: https://kubernetes.io/docs/concepts/storage/volumes/
   extraVolumeMounts: []
-    # - name: extra-volume
-    #   mountPath: /extra/path
   
   # Liveness and readiness probes
   livenessProbe:
+    # enabled: Whether to enable the liveness probe.
+    #          If the probe fails, Kubernetes will restart the container.
+    #          Reference: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
     enabled: true
+    
+    # httpGet: HTTP GET request configuration for the probe.
+    #          Other options include tcpSocket, exec, grpc.
     httpGet:
+      # path: HTTP path to check (e.g., /health, /ping, /status)
       path: /health
+      # port: Port to check (can be port name or number)
       port: http
+    
+    # initialDelaySeconds: Number of seconds after the container has started before liveness probes are initiated.
+    #                      Useful for applications that take time to start up.
     initialDelaySeconds: 30
+    
+    # periodSeconds: How often (in seconds) to perform the probe.
+    #                Defaults to 10 seconds.
     periodSeconds: 10
+    
+    # timeoutSeconds: Number of seconds after which the probe times out.
+    #                 Defaults to 1 second.
     timeoutSeconds: 5
+    
+    # failureThreshold: Minimum consecutive failures for the probe to be considered failed.
+    #                   After this many failures, the container will be restarted.
     failureThreshold: 3
   
   readinessProbe:
+    # enabled: Whether to enable the readiness probe.
+    #          If the probe fails, the Pod will be removed from service endpoints.
+    #          Reference: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
     enabled: true
+    
+    # httpGet: HTTP GET request configuration for the probe.
     httpGet:
+      # path: HTTP path to check (e.g., /ready, /health/ready)
       path: /ready
+      # port: Port to check (can be port name or number)
       port: http
+    
+    # initialDelaySeconds: Number of seconds after the container has started before readiness probes are initiated.
     initialDelaySeconds: 5
+    
+    # periodSeconds: How often (in seconds) to perform the probe.
     periodSeconds: 5
+    
+    # timeoutSeconds: Number of seconds after which the probe times out.
     timeoutSeconds: 3
+    
+    # failureThreshold: Minimum consecutive failures for the probe to be considered failed.
+    #                   After this many failures, the Pod will be marked as not ready.
     failureThreshold: 3
   
   # Startup probe
   startupProbe:
+    # enabled: Whether to enable the startup probe.
+    #          This probe is useful for slow-starting containers.
+    #          Reference: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
     enabled: false
+    
+    # httpGet: HTTP GET request configuration for the probe.
     httpGet:
+      # path: HTTP path to check (e.g., /startup, /health/startup)
       path: /startup
+      # port: Port to check (can be port name or number)
       port: http
+    
+    # initialDelaySeconds: Number of seconds after the container has started before startup probes are initiated.
     initialDelaySeconds: 10
+    
+    # periodSeconds: How often (in seconds) to perform the probe.
+    #                Should be shorter than the expected startup time.
     periodSeconds: 10
+    
+    # timeoutSeconds: Number of seconds after which the probe times out.
     timeoutSeconds: 1
+    
+    # failureThreshold: Minimum consecutive failures for the probe to be considered failed.
+    #                   After this many failures, the container will be restarted.
+    #                   Should be high enough to allow for slow startup times.
     failureThreshold: 30
 
 # DaemonSet specific configuration
@@ -581,8 +659,8 @@ daemonset:
   #                 Reference: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/#update-strategy
   updateStrategy:
     # type: The update strategy type. Can be "RollingUpdate" or "OnDelete".
-    #       - RollingUpdate: Pods are updated in order (default)
-    #       - OnDelete: Pods are only updated when manually deleted
+    #       RollingUpdate means Pods are updated in order (default).
+    #       OnDelete means Pods are only updated when manually deleted.
     #       Reference: https://kubernetes.io/docs/concepts/workloads/controllers/daemonset/#update-strategy
     type: RollingUpdate
   
@@ -593,91 +671,192 @@ daemonset:
     # Overrides the image tag whose default is the chart appVersion.
     tag: ""
   
+  # imagePullSecrets: List of secrets to use for pulling images from private registries.
+  #                   Each secret must contain credentials for the registry.
+  #                   Reference: https://kubernetes.io/docs/concepts/containers/images/#specifying-imagepullsecrets-on-a-pod
   imagePullSecrets: []
   
+  # podAnnotations: Annotations to add to the Pod metadata.
+  #                 Common annotations include Prometheus scraping and Istio sidecar injection.
   podAnnotations: {}
   
-  podSecurityContext:
-    fsGroup: 2000
+  # podSecurityContext: Security context for the Pod.
+  #                     Applies to all containers in the Pod.
+  #                     Reference: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+  #                     Default is empty to avoid unexpected behavior with fsGroup.
+  podSecurityContext: {}
   
+  # securityContext: Security context for the main container.
+  #                  Reference: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
   securityContext:
+    # capabilities: Linux capabilities to add or drop from the container.
+    #               Reference: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-capabilities-for-a-container
     capabilities:
+      # drop: List of capabilities to drop from the container.
+      #       "ALL" drops all capabilities, providing maximum security.
       drop:
       - ALL
+    
+    # readOnlyRootFilesystem: Whether the container's root filesystem should be read-only.
+    #                         This prevents the container from writing to the root filesystem,
+    #                         improving security but may require additional volumes for writable directories.
     readOnlyRootFilesystem: true
+    
+    # runAsNonRoot: Indicates that the container must run as a non-root user.
+    #               This is a security best practice to prevent privilege escalation.
     runAsNonRoot: true
+    
+    # runAsUser: The UID to run the container process as.
+    #            Must be a non-root user when runAsNonRoot is true.
     runAsUser: 1000
   
+  # resources: Resource requests and limits for the container.
+  #            Reference: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+  #            We usually recommend not to specify default resources and to leave this as a conscious
+  #            choice for the user. This also increases chances charts run on environments with little
+  #            resources, such as Minikube. If you do want to specify resources, uncomment the following
+  #            lines, adjust them as necessary, and remove the curly braces after 'resources:'.
   resources:
-    # We usually recommend not to specify default resources and to leave this as a conscious
-    # choice for the user. This also increases chances charts run on environments with little
-    # resources, such as Minikube. If you do want to specify resources, uncomment the following
-    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits: Maximum amount of resources the container can use.
+    #         If the container exceeds these limits, it may be terminated.
+    #         CPU: Can be specified in cores (1, 2) or millicores (1000m, 2000m)
+    #         Memory: Can be specified in bytes (1Gi, 512Mi) or decimal (1.5Gi)
+    #         Reference: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#requests-and-limits
     limits:
       cpu: 500m
       memory: 512Mi
+    
+    # requests: Amount of resources the container requests.
+    #           Kubernetes will schedule the Pod on a node that can provide these resources.
+    #           If not specified, defaults to the limits values.
+    #           Reference: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#requests-and-limits
     requests:
       cpu: 250m
       memory: 256Mi
   
+  # nodeSelector: Node selection constraints for Pod scheduling.
+  #               Pods will only be scheduled on nodes that have the specified labels.
+  #               Reference: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
   nodeSelector: {}
   
+  # tolerations: List of tolerations for tainted nodes.
+  #              Allows Pods to be scheduled on nodes with matching taints.
+  #              Reference: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
   tolerations: []
   
+  # affinity: Advanced scheduling constraints for Pod placement.
+  #           Includes node affinity, pod affinity, and pod anti-affinity rules.
+  #           Reference: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
   affinity: {}
   
   # Additional environment variables
+  # env: List of environment variables to pass to the container.
+  #      Each variable can have a name and value, or reference a Secret/ConfigMap.
+  #      Reference: https://kubernetes.io/docs/tasks/inject-data-application/define-environment-variable-container/
   env: []
-    # - name: ENV_VAR_NAME
-    #   value: "value"
   
   # Additional volumes
+  # extraVolumes: List of additional volumes to mount to the Pod.
+  #               Common volume types include ConfigMap, Secret, PersistentVolumeClaim, etc.
+  #               Reference: https://kubernetes.io/docs/concepts/storage/volumes/
   extraVolumes: []
-    # - name: extra-volume
-    #   configMap:
-    #     name: extra-config
   
   # Additional volume mounts
+  # extraVolumeMounts: List of volume mounts for the main container.
+  #                    These volumes must be defined in extraVolumes.
+  #                    Reference: https://kubernetes.io/docs/concepts/storage/volumes/
   extraVolumeMounts: []
-    # - name: extra-volume
-    #   mountPath: /extra/path
   
   # Init containers
+  # initContainers: List of init containers that run before the main containers start.
+  #                 Init containers must complete successfully before the main containers start.
+  #                 Reference: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
   initContainers: []
-    # - name: init-container
-    #   image: busybox
-    #   command: ['sh', '-c', 'echo "Init container running"']
   
   # Liveness and readiness probes
   livenessProbe:
+    # enabled: Whether to enable the liveness probe.
+    #          If the probe fails, Kubernetes will restart the container.
+    #          Reference: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
     enabled: true
+    
+    # httpGet: HTTP GET request configuration for the probe.
+    #          Other options include tcpSocket, exec, grpc.
     httpGet:
+      # path: HTTP path to check (e.g., /health, /ping, /status)
       path: /health
+      # port: Port to check (can be port name or number)
       port: http
+    
+    # initialDelaySeconds: Number of seconds after the container has started before liveness probes are initiated.
+    #                      Useful for applications that take time to start up.
     initialDelaySeconds: 30
+    
+    # periodSeconds: How often (in seconds) to perform the probe.
+    #                Defaults to 10 seconds.
     periodSeconds: 10
+    
+    # timeoutSeconds: Number of seconds after which the probe times out.
+    #                 Defaults to 1 second.
     timeoutSeconds: 5
+    
+    # failureThreshold: Minimum consecutive failures for the probe to be considered failed.
+    #                   After this many failures, the container will be restarted.
     failureThreshold: 3
   
   readinessProbe:
+    # enabled: Whether to enable the readiness probe.
+    #          If the probe fails, the Pod will be removed from service endpoints.
+    #          Reference: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
     enabled: true
+    
+    # httpGet: HTTP GET request configuration for the probe.
     httpGet:
+      # path: HTTP path to check (e.g., /ready, /health/ready)
       path: /ready
+      # port: Port to check (can be port name or number)
       port: http
+    
+    # initialDelaySeconds: Number of seconds after the container has started before readiness probes are initiated.
     initialDelaySeconds: 5
+    
+    # periodSeconds: How often (in seconds) to perform the probe.
     periodSeconds: 5
+    
+    # timeoutSeconds: Number of seconds after which the probe times out.
     timeoutSeconds: 3
+    
+    # failureThreshold: Minimum consecutive failures for the probe to be considered failed.
+    #                   After this many failures, the Pod will be marked as not ready.
     failureThreshold: 3
   
   # Startup probe
   startupProbe:
+    # enabled: Whether to enable the startup probe.
+    #          This probe is useful for slow-starting containers.
+    #          Reference: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
     enabled: false
+    
+    # httpGet: HTTP GET request configuration for the probe.
     httpGet:
+      # path: HTTP path to check (e.g., /startup, /health/startup)
       path: /startup
+      # port: Port to check (can be port name or number)
       port: http
+    
+    # initialDelaySeconds: Number of seconds after the container has started before startup probes are initiated.
     initialDelaySeconds: 10
+    
+    # periodSeconds: How often (in seconds) to perform the probe.
+    #                Should be shorter than the expected startup time.
     periodSeconds: 10
+    
+    # timeoutSeconds: Number of seconds after which the probe times out.
     timeoutSeconds: 1
+    
+    # failureThreshold: Minimum consecutive failures for the probe to be considered failed.
+    #                   After this many failures, the container will be restarted.
+    #                   Should be high enough to allow for slow startup times.
     failureThreshold: 30
 
 # PersistentVolumeClaim configuration
@@ -695,9 +874,9 @@ persistence:
   
   # accessMode: The access mode for the PVC.
   #             Options: "ReadWriteOnce", "ReadOnlyMany", "ReadWriteMany"
-  #             - ReadWriteOnce: Can be mounted as read-write by a single node
-  #             - ReadOnlyMany: Can be mounted read-only by many nodes
-  #             - ReadWriteMany: Can be mounted as read-write by many nodes
+  #             ReadWriteOnce means can be mounted as read-write by a single node.
+  #             ReadOnlyMany means can be mounted read-only by many nodes.
+  #             ReadWriteMany means can be mounted as read-write by many nodes.
   #             Reference: https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes
   accessMode: ReadWriteOnce
   
@@ -707,8 +886,7 @@ persistence:
   size: 8Gi
   
   # annotations: Annotations to add to the PVC metadata.
-  #              Common annotations include:
-  #              - volume.beta.kubernetes.io/storage-class: "fast-ssd"
+  #              Common annotations include storage class specifications.
   annotations: {}
 
 # StorageClass configuration for dynamic volume provisioning
@@ -719,28 +897,18 @@ storageClass:
   enabled: false
   
   # annotations: Annotations to add to the StorageClass metadata.
-  #              Common annotations include:
-  #              - storageclass.kubernetes.io/is-default-class: "true" (mark as default)
+  #              Common annotations include marking the class as default.
   annotations: {}
   
   # provisioner: The provisioner that should be used for this StorageClass.
-  #              Common provisioners:
-  #              - kubernetes.io/aws-ebs (AWS EBS)
-  #              - kubernetes.io/gce-pd (GCP Persistent Disk)
-  #              - kubernetes.io/azure-disk (Azure Disk)
-  #              - kubernetes.io/no-provisioner (manual provisioning)
+  #              Common provisioners include cloud provider storage drivers.
   #              Reference: https://kubernetes.io/docs/concepts/storage/storage-classes/#provisioner
   provisioner: kubernetes.io/no-provisioner
   
   # parameters: Parameters for the provisioner.
   #             These are specific to the provisioner being used.
-  #             Common parameters:
-  #             - type: ssd, hdd (for cloud providers)
-  #             - zone: availability zone
-  #             - fsType: filesystem type (ext4, xfs, etc.)
+  #             Common parameters include storage type, zone, and filesystem type.
   parameters: {}
-    # type: ssd
-    # zone: us-west1-a
   
   # reclaimPolicy: The reclaim policy for volumes created with this StorageClass.
   #                Options: "Delete", "Retain"
@@ -765,11 +933,6 @@ storageClass:
   #                    Used for zone-aware storage provisioning.
   #                    Reference: https://kubernetes.io/docs/concepts/storage/storage-classes/#allowed-topologies
   allowedTopologies: []
-    # - matchLabelExpressions:
-    #     - key: topology.kubernetes.io/zone
-    #       values:
-    #         - us-west1-a
-    #         - us-west1-b
 
 # ConfigMap configuration
 # ConfigMap allows you to decouple configuration artifacts from image content to keep containerized applications portable.
@@ -1272,13 +1435,43 @@ cronJob:
   # args: The arguments to pass to the command.
   #       If not specified, uses the image's default arguments.
   args: []
+  
+  # env: List of environment variables to pass to the container.
+  #      Each variable can have a name and value, or reference a Secret/ConfigMap.
+  #      Reference: https://kubernetes.io/docs/tasks/inject-data-application/define-environment-variable-container/
   env: []
+  
+  # resources: Resource requests and limits for the container.
+  #            Reference: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
   resources: {}
+  
+  # volumeMounts: List of volume mounts for the container.
+  #               These volumes must be defined in volumes.
+  #               Reference: https://kubernetes.io/docs/concepts/storage/volumes/
   volumeMounts: []
+  
+  # volumes: List of volumes to mount to the Pod.
+  #          Common volume types include ConfigMap, Secret, PersistentVolumeClaim, etc.
+  #          Reference: https://kubernetes.io/docs/concepts/storage/volumes/
   volumes: []
+  
+  # nodeSelector: Node selection constraints for Pod scheduling.
+  #               Pods will only be scheduled on nodes that have the specified labels.
+  #               Reference: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
   nodeSelector: {}
+  
+  # affinity: Advanced scheduling constraints for Pod placement.
+  #           Includes node affinity, pod affinity, and pod anti-affinity rules.
+  #           Reference: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
   affinity: {}
+  
+  # tolerations: List of tolerations for tainted nodes.
+  #              Allows Pods to be scheduled on nodes with matching taints.
+  #              Reference: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
   tolerations: []
+  
+  # securityContext: Security context for the container.
+  #                  Reference: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
   securityContext: {}
 
 # LimitRange configuration
@@ -1299,19 +1492,6 @@ limitRange:
   #         Each limit can specify constraints for containers, pods, or persistent volume claims.
   #         Reference: https://kubernetes.io/docs/concepts/policy/limit-range/#limitrange-resource
   limits: []
-    # - type: Container
-    #   max:
-    #     cpu: 2
-    #     memory: 4Gi
-    #   min:
-    #     cpu: 100m
-    #     memory: 128Mi
-    #   default:
-    #     cpu: 500m
-    #     memory: 512Mi
-    #   defaultRequest:
-    #     cpu: 250m
-    #     memory: 256Mi
 
 # ResourceQuota configuration
 # ResourceQuota provides constraints that limit aggregate resource consumption per namespace.
@@ -1328,13 +1508,6 @@ resourceQuota:
   # hard: The set of desired hard limits for each named resource.
   #       Reference: https://kubernetes.io/docs/concepts/policy/resource-quotas/#compute-resource-quota
   hard: {}
-    # requests.cpu: "2"
-    # requests.memory: 4Gi
-    # limits.cpu: "4"
-    # limits.memory: 8Gi
-    # pods: "10"
-    # services: "5"
-    # persistentvolumeclaims: "4"
   
   # scopeSelector: A collection of filters like scopes that must match each object tracked by a quota.
   #                Reference: https://kubernetes.io/docs/concepts/policy/resource-quotas/#quota-scopes
@@ -1406,14 +1579,46 @@ job:
   # command: The command to run in the container.
   #          If not specified, uses the image's default command.
   command: []
+  # args: The arguments to pass to the command.
+  #       If not specified, uses the image's default arguments.
   args: []
+  
+  # env: List of environment variables to pass to the container.
+  #      Each variable can have a name and value, or reference a Secret/ConfigMap.
+  #      Reference: https://kubernetes.io/docs/tasks/inject-data-application/define-environment-variable-container/
   env: []
+  
+  # resources: Resource requests and limits for the container.
+  #            Reference: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
   resources: {}
+  
+  # volumeMounts: List of volume mounts for the container.
+  #               These volumes must be defined in volumes.
+  #               Reference: https://kubernetes.io/docs/concepts/storage/volumes/
   volumeMounts: []
+  
+  # volumes: List of volumes to mount to the Pod.
+  #          Common volume types include ConfigMap, Secret, PersistentVolumeClaim, etc.
+  #          Reference: https://kubernetes.io/docs/concepts/storage/volumes/
   volumes: []
+  
+  # nodeSelector: Node selection constraints for Pod scheduling.
+  #               Pods will only be scheduled on nodes that have the specified labels.
+  #               Reference: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
   nodeSelector: {}
+  
+  # affinity: Advanced scheduling constraints for Pod placement.
+  #           Includes node affinity, pod affinity, and pod anti-affinity rules.
+  #           Reference: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
   affinity: {}
+  
+  # tolerations: List of tolerations for tainted nodes.
+  #              Allows Pods to be scheduled on nodes with matching taints.
+  #              Reference: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
   tolerations: []
+  
+  # securityContext: Security context for the container.
+  #                  Reference: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
   securityContext: {}
 
 # MutatingWebhookConfiguration for admission control
@@ -1431,28 +1636,6 @@ mutatingWebhookConfiguration:
   #           Each webhook defines when and how to call the webhook service.
   #           Reference: https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#webhook-configuration
   webhooks: []
-    # - name: example-mutating-webhook
-    #   clientConfig:
-    #     service:
-    #       name: webhook-service
-    #       namespace: default
-    #       path: /mutate
-    #       port: 443
-    #     caBundle: ""  # Base64-encoded CA certificate
-    #   rules:
-    #     - operations: ["CREATE", "UPDATE"]
-    #       apiGroups: [""]
-    #       apiVersions: ["v1"]
-    #       resources: ["pods"]
-    #       scope: "Namespaced"
-    #   failurePolicy: Fail
-    #   matchPolicy: Equivalent
-    #   namespaceSelector: {}
-    #   objectSelector: {}
-    #   sideEffects: None
-    #   timeoutSeconds: 10
-    #   admissionReviewVersions: ["v1"]
-    #   reinvocationPolicy: IfNeeded
 
 # ValidatingWebhookConfiguration for admission control
 # ValidatingWebhookConfiguration describes the configuration of and admission webhook that accept or reject an object, but it may not change the object.
@@ -1469,27 +1652,6 @@ validatingWebhookConfiguration:
   #           Each webhook defines when and how to call the webhook service.
   #           Reference: https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#webhook-configuration
   webhooks: []
-    # - name: example-validating-webhook
-    #   clientConfig:
-    #     service:
-    #       name: webhook-service
-    #       namespace: default
-    #       path: /validate
-    #       port: 443
-    #     caBundle: ""  # Base64-encoded CA certificate
-    #   rules:
-    #     - operations: ["CREATE", "UPDATE"]
-    #       apiGroups: [""]
-    #       apiVersions: ["v1"]
-    #       resources: ["pods"]
-    #       scope: "Namespaced"
-    #   failurePolicy: Fail
-    #   matchPolicy: Equivalent
-    #   namespaceSelector: {}
-    #   objectSelector: {}
-    #   sideEffects: None
-    #   timeoutSeconds: 10
-    #   admissionReviewVersions: ["v1"]
 
 # Istio Service Mesh configuration
 # Istio is an open platform to connect, manage, and secure microservices.
@@ -1514,24 +1676,14 @@ istio:
     #        Can be a DNS name with wildcard prefix or an IP address.
     #        Reference: https://istio.io/latest/docs/reference/config/networking/virtual-service/#VirtualService
     hosts: []
-      # - kairoscloud.example.com
     
     # gateways: The names of gateways and sidecars that should apply these routes.
     #           Reference: https://istio.io/latest/docs/reference/config/networking/virtual-service/#VirtualService
     gateways: []
-      # - kairoscloud-gateway
     
     # http: An ordered list of route rules for HTTP traffic.
     #       Reference: https://istio.io/latest/docs/reference/config/networking/virtual-service/#HTTPRoute
     http: []
-      # - match:
-      #   - uri:
-      #       prefix: /api
-      #   route:
-      #   - destination:
-      #       host: kairoscloud-chart
-      #       port:
-      #         number: 80
     
     # tcp: An ordered list of route rules for TCP traffic.
     #      TCP routing is used for non-HTTP protocols like database connections.
@@ -1573,12 +1725,6 @@ istio:
     #        Rules are evaluated in order, and the first matching rule determines the action.
     #        Reference: https://istio.io/latest/docs/reference/config/security/authorization-policy/#Rule
     rules: []
-      # - from:
-      #   - source:
-      #       principals: ["cluster.local/ns/default/sa/sleep"]
-      #   to:
-      #   - operation:
-      #       methods: ["GET"]
     
   # PeerAuthentication configuration for mTLS
   # PeerAuthentication defines the mutual TLS settings for workloads.
@@ -1612,8 +1758,6 @@ istio:
     #                Overrides the global mtls.mode for specific ports.
     #                Reference: https://istio.io/latest/docs/reference/config/security/peer_authentication/#PeerAuthentication
     portLevelMtls: {}
-      # 8080:
-      #   mode: DISABLE
     
   # RequestAuthentication configuration for JWT authentication
   # RequestAuthentication defines what request authentication methods are supported by a workload.
@@ -1636,9 +1780,6 @@ istio:
     #           Each rule specifies how to validate JWT tokens.
     #           Reference: https://istio.io/latest/docs/reference/config/security/request_authentication/#RequestAuthentication
     jwtRules: []
-      # - issuer: "https://example.com"
-      #   jwksUri: "https://example.com/.well-known/jwks.json"
-      #   audiences: ["api"]
     
   # Gateway configuration for ingress/egress
   # Gateway describes a load balancer operating at the edge of the mesh receiving incoming or outgoing HTTP/TCP connections.
@@ -1656,18 +1797,11 @@ istio:
     #           Common selectors include "istio: ingressgateway" for ingress traffic.
     #           Reference: https://istio.io/latest/docs/reference/config/networking/gateway/#Gateway
     selector: {}
-      # istio: ingressgateway
     
     # servers: A list of server specifications for the gateway.
     #          Each server defines the ports and protocols that the gateway will handle.
     #          Reference: https://istio.io/latest/docs/reference/config/networking/gateway/#Server
     servers: []
-      # - port:
-      #     number: 80
-      #     name: http
-      #     protocol: HTTP
-      #   hosts:
-      #   - kairoscloud.example.com
     
   # Telemetry configuration for observability
   # Telemetry defines how telemetry data (metrics, logs, traces) is generated and collected.
@@ -1690,22 +1824,16 @@ istio:
     #          Defines which metrics providers to use and how to collect metrics.
     #          Reference: https://istio.io/latest/docs/reference/config/telemetry/#Telemetry
     metrics: []
-      # - providers:
-      #   - name: prometheus
     
     # accessLogging: Configuration for access log collection.
     #                Defines which access log providers to use and how to collect logs.
     #                Reference: https://istio.io/latest/docs/reference/config/telemetry/#Telemetry
     accessLogging: []
-      # - providers:
-      #   - name: otel
     
     # tracing: Configuration for distributed tracing.
     #          Defines which tracing providers to use and how to collect traces.
     #          Reference: https://istio.io/latest/docs/reference/config/telemetry/#Telemetry
     tracing: {}
-      # providers:
-      # - name: jaeger
 
 # KEDA (Kubernetes Event-Driven Autoscaling) configuration
 # KEDA is a Kubernetes-based Event Driven Autoscaler that allows you to scale any container based on the number of events needing to be processed.
@@ -1741,79 +1869,15 @@ keda:
   # advanced: Advanced KEDA configuration for ScaledObject.
   #           Reference: https://keda.sh/docs/concepts/scaling-deployments/#scaledobject-spec
   advanced: {}
-    # horizontalPodAutoscalerConfig:
-    #   behavior:
-    #     scaleDown:
-    #       stabilizationWindowSeconds: 300
-    #       policies:
-    #       - type: Percent
-    #         value: 50
-    #         periodSeconds: 60
-    #     scaleUp:
-    #       stabilizationWindowSeconds: 0
-    #       policies:
-    #       - type: Percent
-    #         value: 100
-    #         periodSeconds: 15
   # KEDA triggers configuration
+  # triggers: List of KEDA triggers that define when and how to scale.
+  #           Supports various trigger types including CPU, memory, Prometheus, Kafka, Redis, HTTP, and more.
+  #           Reference: https://keda.sh/docs/scalers/
   triggers: []
-    # Example CPU trigger:
-    # - type: cpu
-    #   metadata:
-    #     type: Utilization
-    #     value: "70"
-    #   metricType: Utilization
-    # 
-    # Example memory trigger:
-    # - type: memory
-    #   metadata:
-    #     type: Utilization
-    #     value: "80"
-    #   metricType: Utilization
-    #
-    # Example Prometheus trigger:
-    # - type: prometheus
-    #   metadata:
-    #     serverAddress: http://prometheus-server.monitoring.svc.cluster.local:80
-    #     metricName: http_requests_per_second
-    #     threshold: '100'
-    #     query: sum(rate(http_requests_total[2m]))
-    #   metricType: AverageValue
-    #
-    # Example Kafka trigger:
-    # - type: kafka
-    #   metadata:
-    #     bootstrapServers: kafka-server:9092
-    #     consumerGroup: my-group
-    #     topic: my-topic
-    #     lagThreshold: '5'
-    #   authenticationRef:
-    #     name: kafka-auth
-    #     kind: Secret
-    #
-    # Example Redis trigger:
-    # - type: redis
-    #   metadata:
-    #     address: redis-server:6379
-    #     listName: mylist
-    #     listLength: '5'
-    #   authenticationRef:
-    #     name: redis-auth
-    #     kind: Secret
-    #
-    # Example HTTP trigger:
-    # - type: http
-    #   metadata:
-    #     url: http://api.example.com/metrics
-    #     valueLocation: 'body'
-    #     targetValue: '100'
-    #   authenticationRef:
-    #     name: http-auth
-    #     kind: Secret
   # Global fallback configuration
+  # fallback: Fallback configuration for when KEDA cannot determine the desired replica count.
+  #           Reference: https://keda.sh/docs/concepts/scaling-deployments/#fallback
   fallback: {}
-    # failureThreshold: 3
-    # replicas: 1
 
 # Chaos Mesh configuration for chaos engineering
 # Chaos Mesh is a cloud-native Chaos Engineering platform that orchestrates chaos on Kubernetes environments.
@@ -1896,68 +1960,9 @@ chaosMesh:
       #          Reference: https://chaos-mesh.org/docs/architecture/overview/#chaosfs
       enabled: false
 
-  # Example chaos experiments configuration
-  # These are example configurations for different chaos types
-  # Uncomment and modify as needed for your specific use cases
-  
-  # HTTPChaos example - HTTP request chaos
-  # httpChaos:
-  #   enabled: true
-  #   mode: "one"
-  #   duration: "30s"
-  #   action: "delay"
-  #   delay: "10s"
-  #   target: "Request"
-  #   method: "GET"
-  #   path: "/api"
-  #   selector:
-  #     namespaces:
-  #       - default
-  #     labelSelectors:
-  #       app: my-app
-
-  # PodChaos example - Pod failure chaos
-  # podChaos:
-  #   enabled: true
-  #   mode: "one"
-  #   duration: "60s"
-  #   action: "pod-failure"
-  #   selector:
-  #     namespaces:
-  #       - default
-  #     labelSelectors:
-  #       app: my-app
-
-  # NetworkChaos example - Network delay chaos
-  # networkChaos:
-  #   enabled: true
-  #   mode: "one"
-  #   duration: "30s"
-  #   action: "delay"
-  #   delay:
-  #     latency: "10ms"
-  #     correlation: "100"
-  #     jitter: "0ms"
-  #   selector:
-  #     namespaces:
-  #       - default
-  #     labelSelectors:
-  #       app: my-app
-
-  # StressChaos example - CPU stress chaos
-  # stressChaos:
-  #   enabled: true
-  #   mode: "one"
-  #   duration: "60s"
-  #   stressors:
-  #     cpu:
-  #       workers: 1
-  #       load: 50
-  #   selector:
-  #     namespaces:
-  #       - default
-  #     labelSelectors:
-  #       app: my-app
+  # Chaos experiments configuration
+  # Configure specific chaos experiments such as HTTPChaos, PodChaos, NetworkChaos, StressChaos, etc.
+  # Reference: https://chaos-mesh.org/docs/simulate-pod-chaos-on-kubernetes/
 
   # Chaos Mesh Workflow configuration
   # Orchestrate multiple chaos experiments in serial or parallel
@@ -1965,118 +1970,10 @@ chaosMesh:
   workflow:
     enabled: false
     annotations: {}
-    # Entry point of the workflow
+    # entry: Entry point of the workflow.
+    #        Specifies which template to start the workflow execution.
     entry: "entry"
-    # Workflow templates - each template represents a step in the workflow
+    # templates: Workflow templates - each template represents a step in the workflow.
+    #            Supports various types including Parallel, Serial, Task, PodChaos, NetworkChaos, StressChaos, etc.
+    #            Reference: https://chaos-mesh.org/docs/create-chaos-mesh-workflow/
     templates: []
-      # Example: Parallel workflow with multiple chaos types
-      # - name: "entry"
-      #   type: "Parallel"
-      #   deadline: "240s"
-      #   children:
-      #     - "stress-chaos"
-      #     - "network-chaos"
-      #     - "pod-chaos"
-      # 
-      # - name: "stress-chaos"
-      #   type: "StressChaos"
-      #   deadline: "60s"
-      #   stressChaos:
-      #     mode: "one"
-      #     selector:
-      #       labelSelectors:
-      #         app: my-app
-      #     stressors:
-      #       cpu:
-      #         workers: 1
-      #         load: 50
-      # 
-      # - name: "network-chaos"
-      #   type: "NetworkChaos"
-      #   deadline: "30s"
-      #   networkChaos:
-      #     action: "delay"
-      #     mode: "one"
-      #     selector:
-      #       labelSelectors:
-      #         app: my-app
-      #     delay:
-      #       latency: "10ms"
-      #       correlation: "100"
-      #       jitter: "0ms"
-      # 
-      # - name: "pod-chaos"
-      #   type: "PodChaos"
-      #   deadline: "60s"
-      #   podChaos:
-      #     action: "pod-failure"
-      #     mode: "one"
-      #     selector:
-      #       labelSelectors:
-      #         app: my-app
-      # 
-      # Example: Serial workflow with conditional branches
-      # - name: "entry"
-      #   type: "Serial"
-      #   deadline: "300s"
-      #   children:
-      #     - "health-check"
-      #     - "conditional-chaos"
-      # 
-      # - name: "health-check"
-      #   type: "Task"
-      #   deadline: "30s"
-      #   task:
-      #     container:
-      #       name: "health-check"
-      #       image: "curlimages/curl:latest"
-      #       command: ["curl", "-f", "http://my-app:8080/health"]
-      #   conditionalBranches:
-      #     - target: "pod-chaos"
-      #       expression: "exitCode == 0"
-      #     - target: "skip-chaos"
-      #       expression: "exitCode != 0"
-      # 
-      # - name: "conditional-chaos"
-      #   type: "PodChaos"
-      #   deadline: "60s"
-      #   podChaos:
-      #     action: "pod-kill"
-      #     mode: "one"
-      #     selector:
-      #       labelSelectors:
-      #         app: my-app
-      # 
-      # - name: "skip-chaos"
-      #   type: "Suspend"
-      #   deadline: "10s"
-      # 
-      # Example: Scheduled chaos experiments
-      # - name: "entry"
-      #   type: "Schedule"
-      #   deadline: "120s"
-      #   schedule:
-      #     schedule: "@every 30s"
-      #     type: "PodChaos"
-      #     podChaos:
-      #       action: "pod-kill"
-      #       mode: "one"
-      #       selector:
-      #         labelSelectors:
-      #           app: my-app
-      # 
-      # Example: Status check with abort
-      # - name: "entry"
-      #   type: "StatusCheck"
-      #   deadline: "60s"
-      #   abortWithStatusCheck: true
-      #   statusCheck:
-      #     mode: "one"
-      #     selector:
-      #       labelSelectors:
-      #         app: my-app
-      #     type: "HTTP"
-      #     http:
-      #       url: "http://my-app:8080/health"
-      #       method: "GET"
-      #       expectedStatus: 200

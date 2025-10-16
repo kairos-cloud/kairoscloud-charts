@@ -51,8 +51,7 @@ should match snapshot for certificate configuration:
               readOnlyRootFilesystem: true
               runAsNonRoot: true
               runAsUser: 1000
-        securityContext:
-          fsGroup: 2000
+        securityContext: {}
         serviceAccountName: RELEASE-NAME-kairoscloud-chart
   2: |
     ports:
@@ -122,8 +121,7 @@ should match snapshot for default deployment:
           readOnlyRootFilesystem: true
           runAsNonRoot: true
           runAsUser: 1000
-    securityContext:
-      fsGroup: 2000
+    securityContext: {}
     serviceAccountName: RELEASE-NAME-kairoscloud-chart
   2: |
     image: nginx:1.0.0
@@ -217,8 +215,7 @@ should match snapshot for hpa configuration:
               readOnlyRootFilesystem: true
               runAsNonRoot: true
               runAsUser: 1000
-        securityContext:
-          fsGroup: 2000
+        securityContext: {}
         serviceAccountName: RELEASE-NAME-kairoscloud-chart
   2: |
     ports:
@@ -297,8 +294,7 @@ should match snapshot for ingress configuration:
               readOnlyRootFilesystem: true
               runAsNonRoot: true
               runAsUser: 1000
-        securityContext:
-          fsGroup: 2000
+        securityContext: {}
         serviceAccountName: RELEASE-NAME-kairoscloud-chart
   2: |
     ports:
@@ -382,8 +378,7 @@ should match snapshot for monitoring configuration:
               readOnlyRootFilesystem: true
               runAsNonRoot: true
               runAsUser: 1000
-        securityContext:
-          fsGroup: 2000
+        securityContext: {}
         serviceAccountName: RELEASE-NAME-kairoscloud-chart
   3: |
     ports:
@@ -470,8 +465,7 @@ should match snapshot for poddisruptionbudget:
               readOnlyRootFilesystem: true
               runAsNonRoot: true
               runAsUser: 1000
-        securityContext:
-          fsGroup: 2000
+        securityContext: {}
         serviceAccountName: RELEASE-NAME-kairoscloud-chart
   2: |
     ports:
@@ -531,8 +525,7 @@ should match snapshot for production configuration:
           readOnlyRootFilesystem: true
           runAsNonRoot: true
           runAsUser: 1000
-    securityContext:
-      fsGroup: 2000
+    securityContext: {}
     serviceAccountName: RELEASE-NAME-kairoscloud-chart
 should match snapshot for secret with stringData:
   1: |
@@ -547,7 +540,6 @@ should match snapshot for security configuration:
     runAsNonRoot: true
     runAsUser: 1000
   2: |
-    fsGroup: 2000
 should match snapshot for service configuration:
   1: |
     replicas: 1
@@ -601,8 +593,7 @@ should match snapshot for service configuration:
               readOnlyRootFilesystem: true
               runAsNonRoot: true
               runAsUser: 1000
-        securityContext:
-          fsGroup: 2000
+        securityContext: {}
         serviceAccountName: RELEASE-NAME-kairoscloud-chart
   2: |
     ports:

@@ -293,3 +293,39 @@ tests:
       - equal:
           path: spec.progressDeadlineSeconds
           value: 120
+
+  - it: should create deployment with default empty podSecurityContext
+    set:
+      deployment:
+        enabled: true
+        image:
+          repository: nginx
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: spec.template.spec.securityContext
+          value: {}
+
+  - it: should create deployment with explicit podSecurityContext configuration
+    set:
+      deployment:
+        enabled: true
+        image:
+          repository: nginx
+        podSecurityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          fsGroup: 2000
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: spec.template.spec.securityContext.runAsNonRoot
+          value: true
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 1000
+      - equal:
+          path: spec.template.spec.securityContext.fsGroup
+          value: 2000

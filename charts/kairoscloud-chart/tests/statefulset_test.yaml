@@ -275,3 +275,39 @@ tests:
           of: StatefulSet
       - isAPIVersion:
           of: apps/v1
+
+  - it: should create statefulset with default empty podSecurityContext
+    set:
+      statefulset:
+        enabled: true
+        image:
+          repository: nginx
+    asserts:
+      - isKind:
+          of: StatefulSet
+      - equal:
+          path: spec.template.spec.securityContext
+          value: {}
+
+  - it: should create statefulset with explicit podSecurityContext configuration
+    set:
+      statefulset:
+        enabled: true
+        image:
+          repository: nginx
+        podSecurityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          fsGroup: 2000
+    asserts:
+      - isKind:
+          of: StatefulSet
+      - equal:
+          path: spec.template.spec.securityContext.runAsNonRoot
+          value: true
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 1000
+      - equal:
+          path: spec.template.spec.securityContext.fsGroup
+          value: 2000
