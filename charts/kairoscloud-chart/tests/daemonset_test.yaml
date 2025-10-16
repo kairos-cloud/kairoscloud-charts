@@ -168,17 +168,14 @@ tests:
       daemonset:
         enabled: true
         livenessProbe:
-          enabled: true
           httpGet:
             path: /health
             port: http
         readinessProbe:
-          enabled: true
           httpGet:
             path: /ready
             port: http
         startupProbe:
-          enabled: true
           httpGet:
             path: /startup
             port: http
@@ -362,5 +359,384 @@ tests:
       daemonset:
         enabled: false
     asserts:
-      - isNull:
+      - notExists:
           path: kind
+
+  # Comprehensive probe tests for DaemonSet
+  - it: should create daemonset with tcpSocket liveness probe
+    set:
+      deployment:
+        enabled: false
+      statefulset:
+        enabled: false
+      daemonset:
+        enabled: true
+        livenessProbe:
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+    asserts:
+      - isKind:
+          of: DaemonSet
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.tcpSocket.port
+          value: 8080
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.initialDelaySeconds
+          value: 15
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.periodSeconds
+          value: 5
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.timeoutSeconds
+          value: 3
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.failureThreshold
+          value: 3
+
+  - it: should create daemonset with exec liveness probe
+    set:
+      deployment:
+        enabled: false
+      statefulset:
+        enabled: false
+      daemonset:
+        enabled: true
+        livenessProbe:
+          exec:
+            command:
+              - /bin/sh
+              - -c
+              - "pgrep nginx"
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+    asserts:
+      - isKind:
+          of: DaemonSet
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.exec.command[0]
+          value: /bin/sh
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.exec.command[1]
+          value: -c
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.exec.command[2]
+          value: pgrep nginx
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.initialDelaySeconds
+          value: 20
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.successThreshold
+          value: 1
+
+  - it: should create daemonset with grpc liveness probe
+    set:
+      deployment:
+        enabled: false
+      statefulset:
+        enabled: false
+      daemonset:
+        enabled: true
+        livenessProbe:
+          grpc:
+            port: 9090
+            service: health
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 2
+    asserts:
+      - isKind:
+          of: DaemonSet
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.grpc.port
+          value: 9090
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.grpc.service
+          value: health
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.initialDelaySeconds
+          value: 10
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.timeoutSeconds
+          value: 2
+
+  - it: should create daemonset with tcpSocket readiness probe
+    set:
+      deployment:
+        enabled: false
+      statefulset:
+        enabled: false
+      daemonset:
+        enabled: true
+        readinessProbe:
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 3
+          timeoutSeconds: 2
+          failureThreshold: 3
+    asserts:
+      - isKind:
+          of: DaemonSet
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.tcpSocket.port
+          value: 8080
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.initialDelaySeconds
+          value: 5
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.periodSeconds
+          value: 3
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.timeoutSeconds
+          value: 2
+
+  - it: should create daemonset with exec readiness probe
+    set:
+      deployment:
+        enabled: false
+      statefulset:
+        enabled: false
+      daemonset:
+        enabled: true
+        readinessProbe:
+          exec:
+            command:
+              - curl
+              - -f
+              - http://localhost:8080/ready
+          initialDelaySeconds: 3
+          periodSeconds: 2
+          successThreshold: 1
+          failureThreshold: 3
+    asserts:
+      - isKind:
+          of: DaemonSet
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.exec.command[0]
+          value: curl
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.exec.command[1]
+          value: -f
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.exec.command[2]
+          value: http://localhost:8080/ready
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.initialDelaySeconds
+          value: 3
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.successThreshold
+          value: 1
+
+  - it: should create daemonset with grpc readiness probe
+    set:
+      deployment:
+        enabled: false
+      statefulset:
+        enabled: false
+      daemonset:
+        enabled: true
+        readinessProbe:
+          grpc:
+            port: 9090
+          initialDelaySeconds: 2
+          periodSeconds: 2
+          timeoutSeconds: 1
+          successThreshold: 1
+    asserts:
+      - isKind:
+          of: DaemonSet
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.grpc.port
+          value: 9090
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.initialDelaySeconds
+          value: 2
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.successThreshold
+          value: 1
+
+  - it: should create daemonset with httpGet startup probe
+    set:
+      deployment:
+        enabled: false
+      statefulset:
+        enabled: false
+      daemonset:
+        enabled: true
+        startupProbe:
+          httpGet:
+            path: /startup
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 30
+          successThreshold: 1
+    asserts:
+      - isKind:
+          of: DaemonSet
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.httpGet.path
+          value: /startup
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.httpGet.port
+          value: http
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.initialDelaySeconds
+          value: 10
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.failureThreshold
+          value: 30
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.successThreshold
+          value: 1
+
+  - it: should create daemonset with tcpSocket startup probe
+    set:
+      deployment:
+        enabled: false
+      statefulset:
+        enabled: false
+      daemonset:
+        enabled: true
+        startupProbe:
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 3
+          timeoutSeconds: 2
+          failureThreshold: 20
+    asserts:
+      - isKind:
+          of: DaemonSet
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.tcpSocket.port
+          value: 8080
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.initialDelaySeconds
+          value: 5
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.failureThreshold
+          value: 20
+
+  - it: should create daemonset with exec startup probe
+    set:
+      deployment:
+        enabled: false
+      statefulset:
+        enabled: false
+      daemonset:
+        enabled: true
+        startupProbe:
+          exec:
+            command:
+              - /bin/sh
+              - -c
+              - "test -f /tmp/ready"
+          initialDelaySeconds: 5
+          periodSeconds: 2
+          timeoutSeconds: 1
+          failureThreshold: 15
+          successThreshold: 1
+    asserts:
+      - isKind:
+          of: DaemonSet
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.exec.command[0]
+          value: /bin/sh
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.exec.command[1]
+          value: -c
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.exec.command[2]
+          value: test -f /tmp/ready
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.failureThreshold
+          value: 15
+
+  - it: should create daemonset with grpc startup probe
+    set:
+      deployment:
+        enabled: false
+      statefulset:
+        enabled: false
+      daemonset:
+        enabled: true
+        startupProbe:
+          grpc:
+            port: 9090
+            service: startup
+          initialDelaySeconds: 3
+          periodSeconds: 2
+          timeoutSeconds: 1
+          failureThreshold: 10
+          successThreshold: 1
+    asserts:
+      - isKind:
+          of: DaemonSet
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.grpc.port
+          value: 9090
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.grpc.service
+          value: startup
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.initialDelaySeconds
+          value: 3
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.failureThreshold
+          value: 10
+
+
+  - it: should create daemonset with all probe types combined
+    set:
+      deployment:
+        enabled: false
+      statefulset:
+        enabled: false
+      daemonset:
+        enabled: true
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        startupProbe:
+          exec:
+            command:
+              - /bin/sh
+              - -c
+              - "test -f /tmp/ready"
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 1
+          failureThreshold: 30
+          successThreshold: 1
+    asserts:
+      - isKind:
+          of: DaemonSet
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /health
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.tcpSocket.port
+          value: 8080
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.exec.command[0]
+          value: /bin/sh

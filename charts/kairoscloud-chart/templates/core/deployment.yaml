@@ -52,15 +52,15 @@ spec:
             - name: http
               containerPort: {{ .Values.service.targetPort }}
               protocol: TCP
-          {{- if .Values.deployment.livenessProbe.enabled }}
+          {{- if and .Values.deployment.livenessProbe (ne (len .Values.deployment.livenessProbe) 0) }}
           livenessProbe:
             {{- toYaml .Values.deployment.livenessProbe | nindent 12 }}
           {{- end }}
-          {{- if .Values.deployment.readinessProbe.enabled }}
+          {{- if and .Values.deployment.readinessProbe (ne (len .Values.deployment.readinessProbe) 0) }}
           readinessProbe:
             {{- toYaml .Values.deployment.readinessProbe | nindent 12 }}
           {{- end }}
-          {{- if .Values.deployment.startupProbe.enabled }}
+          {{- if and .Values.deployment.startupProbe (ne (len .Values.deployment.startupProbe) 0) }}
           startupProbe:
             {{- toYaml .Values.deployment.startupProbe | nindent 12 }}
           {{- end }}
