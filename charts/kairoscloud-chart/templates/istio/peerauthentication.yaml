@@ -1,0 +1,43 @@
+{{- if and .Values.istio.enabled .Values.istio.peerAuthentication.enabled }}
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: {{ include "kairoscloud-chart.fullname" . }}
+  labels:
+    {{- include "kairoscloud-chart.labels" . | nindent 4 }}
+  {{- with .Values.istio.peerAuthentication.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.istio.peerAuthentication.selector }}
+  selector:
+    {{- if .Values.istio.peerAuthentication.selector.matchLabels }}
+    matchLabels:
+      {{- toYaml .Values.istio.peerAuthentication.selector.matchLabels | nindent 6 }}
+    {{- end }}
+    {{- if .Values.istio.peerAuthentication.selector.matchExpressions }}
+    matchExpressions:
+      {{- toYaml .Values.istio.peerAuthentication.selector.matchExpressions | nindent 6 }}
+    {{- end }}
+  {{- else }}
+  selector:
+    matchLabels:
+      {{- include "kairoscloud-chart.selectorLabels" . | nindent 6 }}
+  {{- end }}
+  {{- if .Values.istio.peerAuthentication.mtls }}
+  mtls:
+    {{- if .Values.istio.peerAuthentication.mtls.mode }}
+    mode: {{ .Values.istio.peerAuthentication.mtls.mode }}
+    {{- end }}
+  {{- end }}
+  {{- if .Values.istio.peerAuthentication.portLevelMtls }}
+  portLevelMtls:
+    {{- range $port, $config := .Values.istio.peerAuthentication.portLevelMtls }}
+    {{ $port | toString }}:
+      {{- if $config.mode }}
+      mode: {{ $config.mode }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end }}

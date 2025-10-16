@@ -1,0 +1,104 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: timechaos
+templates:
+  - chaos-mesh/timechaos.yaml
+tests:
+  - it: should create timechaos with basic configuration
+    set:
+      chaosMesh:
+        enabled: true
+        timeChaos:
+          enabled: true
+          timeOffset: "2h"
+          duration: "60s"
+    asserts:
+      - isKind:
+          of: TimeChaos
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-kairoscloud-chart-time-chaos
+      - equal:
+          path: spec.timeOffset
+          value: "2h"
+      - equal:
+          path: spec.duration
+          value: "60s"
+
+  - it: should create timechaos with custom selector
+    set:
+      chaosMesh:
+        enabled: true
+        timeChaos:
+          enabled: true
+          selector:
+            namespaces:
+              - custom-namespace
+            labelSelectors:
+              app: test-app
+    asserts:
+      - equal:
+          path: spec.selector.namespaces[0]
+          value: custom-namespace
+      - equal:
+          path: spec.selector.labelSelectors.app
+          value: test-app
+
+  - it: should create timechaos with clock ids
+    set:
+      chaosMesh:
+        enabled: true
+        timeChaos:
+          enabled: true
+          clockIds:
+            - "CLOCK_REALTIME"
+            - "CLOCK_MONOTONIC"
+    asserts:
+      - equal:
+          path: spec.clockIds[0]
+          value: "CLOCK_REALTIME"
+      - equal:
+          path: spec.clockIds[1]
+          value: "CLOCK_MONOTONIC"
+
+  - it: should create timechaos with container names
+    set:
+      chaosMesh:
+        enabled: true
+        timeChaos:
+          enabled: true
+          containerNames:
+            - "main-container"
+            - "sidecar"
+    asserts:
+      - equal:
+          path: spec.containerNames[0]
+          value: "main-container"
+      - equal:
+          path: spec.containerNames[1]
+          value: "sidecar"
+
+  - it: should create timechaos with negative time offset
+    set:
+      chaosMesh:
+        enabled: true
+        timeChaos:
+          enabled: true
+          timeOffset: "-30m"
+    asserts:
+      - equal:
+          path: spec.timeOffset
+          value: "-30m"
+
+  - it: should create timechaos with annotations
+    set:
+      chaosMesh:
+        enabled: true
+        timeChaos:
+          enabled: true
+          annotations:
+            test-annotation: "test-value"
+    asserts:
+      - equal:
+          path: metadata.annotations.test-annotation
+          value: "test-value"
+

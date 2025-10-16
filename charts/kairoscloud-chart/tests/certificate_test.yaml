@@ -1,0 +1,309 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: certificate
+templates:
+  - core/certificate.yaml
+tests:
+  - it: should create certificate with basic values
+    set:
+      certificate:
+        enabled: true
+        issuerRef:
+          name: letsencrypt-prod
+        dnsNames:
+          - example.com
+    asserts:
+      - isKind:
+          of: Certificate
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-kairoscloud-chart-tls
+      - equal:
+          path: spec.secretName
+          value: RELEASE-NAME-kairoscloud-chart-tls
+      - equal:
+          path: spec.issuerRef.name
+          value: letsencrypt-prod
+      - equal:
+          path: spec.dnsNames[0]
+          value: example.com
+
+  - it: should create certificate with custom issuer
+    set:
+      certificate:
+        enabled: true
+        issuerRef:
+          name: my-custom-issuer
+          kind: Issuer
+          group: cert-manager.io
+        dnsNames:
+          - kairoscloud.example.com
+    asserts:
+      - equal:
+          path: spec.issuerRef.name
+          value: my-custom-issuer
+      - equal:
+          path: spec.issuerRef.kind
+          value: Issuer
+      - equal:
+          path: spec.issuerRef.group
+          value: cert-manager.io
+      - equal:
+          path: spec.dnsNames[0]
+          value: kairoscloud.example.com
+
+  - it: should create certificate with common name
+    set:
+      certificate:
+        enabled: true
+        issuerRef:
+          name: letsencrypt-prod
+        dnsNames:
+          - example.com
+        commonName: example.com
+    asserts:
+      - equal:
+          path: spec.commonName
+          value: example.com
+      - equal:
+          path: spec.dnsNames[0]
+          value: example.com
+
+  - it: should create certificate with duration and renew before
+    set:
+      certificate:
+        enabled: true
+        issuerRef:
+          name: letsencrypt-prod
+        dnsNames:
+          - example.com
+        duration: 2160h
+        renewBefore: 360h
+    asserts:
+      - equal:
+          path: spec.duration
+          value: 2160h
+      - equal:
+          path: spec.renewBefore
+          value: 360h
+
+  - it: should create certificate with custom usages
+    set:
+      certificate:
+        enabled: true
+        issuerRef:
+          name: letsencrypt-prod
+        dnsNames:
+          - example.com
+        usages:
+          - digital signature
+          - key encipherment
+          - server auth
+    asserts:
+      - contains:
+          path: spec.usages
+          content: digital signature
+      - contains:
+          path: spec.usages
+          content: key encipherment
+      - contains:
+          path: spec.usages
+          content: server auth
+
+  - it: should create certificate with RSA key algorithm
+    set:
+      certificate:
+        enabled: true
+        issuerRef:
+          name: letsencrypt-prod
+        dnsNames:
+          - example.com
+        keyAlgorithm: RSA
+        keySize: 4096
+    asserts:
+      - equal:
+          path: spec.privateKey.algorithm
+          value: RSA
+      - equal:
+          path: spec.privateKey.size
+          value: 4096
+
+  - it: should create certificate with ECDSA key algorithm
+    set:
+      certificate:
+        enabled: true
+        issuerRef:
+          name: letsencrypt-prod
+        dnsNames:
+          - example.com
+        keyAlgorithm: ECDSA
+        keySize: 256
+    asserts:
+      - equal:
+          path: spec.privateKey.algorithm
+          value: ECDSA
+      - equal:
+          path: spec.privateKey.size
+          value: 256
+
+  - it: should create certificate with Ed25519 key algorithm
+    set:
+      certificate:
+        enabled: true
+        issuerRef:
+          name: letsencrypt-prod
+        dnsNames:
+          - example.com
+        keyAlgorithm: Ed25519
+    asserts:
+      - equal:
+          path: spec.privateKey.algorithm
+          value: Ed25519
+      - equal:
+          path: spec.privateKey.size
+          value: 2048
+
+  - it: should create certificate with annotations
+    set:
+      certificate:
+        enabled: true
+        issuerRef:
+          name: letsencrypt-prod
+        dnsNames:
+          - example.com
+        annotations:
+          test-annotation: "test-value"
+    asserts:
+      - equal:
+          path: metadata.annotations.test-annotation
+          value: "test-value"
+
+  - it: should create certificate with multiple DNS names
+    set:
+      certificate:
+        enabled: true
+        issuerRef:
+          name: letsencrypt-prod
+        dnsNames:
+          - kairoscloud.example.com
+          - api.kairoscloud.example.com
+          - admin.kairoscloud.example.com
+    asserts:
+      - equal:
+          path: spec.dnsNames[0]
+          value: kairoscloud.example.com
+      - equal:
+          path: spec.dnsNames[1]
+          value: api.kairoscloud.example.com
+      - equal:
+          path: spec.dnsNames[2]
+          value: admin.kairoscloud.example.com
+
+  - it: should create certificate with wildcard domain
+    set:
+      certificate:
+        enabled: true
+        issuerRef:
+          name: letsencrypt-prod
+        dnsNames:
+          - example.com
+          - www.example.com
+    asserts:
+      - equal:
+          path: spec.dnsNames[0]
+          value: example.com
+      - equal:
+          path: spec.dnsNames[1]
+          value: www.example.com
+
+  - it: should create certificate with custom group
+    set:
+      certificate:
+        enabled: true
+        issuerRef:
+          name: my-issuer
+          kind: ClusterIssuer
+          group: my-cert-manager.io
+        dnsNames:
+          - example.com
+    asserts:
+      - equal:
+          path: spec.issuerRef.group
+          value: my-cert-manager.io
+      - equal:
+          path: spec.issuerRef.kind
+          value: ClusterIssuer
+      - equal:
+          path: spec.issuerRef.name
+          value: my-issuer
+
+  - it: should create certificate with all options
+    set:
+      certificate:
+        enabled: true
+        issuerRef:
+          name: letsencrypt-prod
+          kind: ClusterIssuer
+          group: cert-manager.io
+        dnsNames:
+          - kairoscloud.example.com
+          - www.kairoscloud.example.com
+        commonName: kairoscloud.example.com
+        duration: 2160h
+        renewBefore: 360h
+        usages:
+          - digital signature
+          - key encipherment
+          - server auth
+        keyAlgorithm: RSA
+        keySize: 4096
+        annotations:
+          test-annotation: "test-value"
+    asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-kairoscloud-chart-tls
+      - equal:
+          path: spec.secretName
+          value: RELEASE-NAME-kairoscloud-chart-tls
+      - equal:
+          path: spec.issuerRef.name
+          value: letsencrypt-prod
+      - equal:
+          path: spec.issuerRef.kind
+          value: ClusterIssuer
+      - equal:
+          path: spec.issuerRef.group
+          value: cert-manager.io
+      - equal:
+          path: spec.dnsNames[0]
+          value: kairoscloud.example.com
+      - equal:
+          path: spec.dnsNames[1]
+          value: www.kairoscloud.example.com
+      - equal:
+          path: spec.commonName
+          value: kairoscloud.example.com
+      - equal:
+          path: spec.duration
+          value: 2160h
+      - equal:
+          path: spec.renewBefore
+          value: 360h
+      - contains:
+          path: spec.usages
+          content: digital signature
+      - contains:
+          path: spec.usages
+          content: key encipherment
+      - contains:
+          path: spec.usages
+          content: server auth
+      - equal:
+          path: spec.privateKey.algorithm
+          value: RSA
+      - equal:
+          path: spec.privateKey.size
+          value: 4096
+      - equal:
+          path: metadata.annotations.test-annotation
+          value: "test-value"

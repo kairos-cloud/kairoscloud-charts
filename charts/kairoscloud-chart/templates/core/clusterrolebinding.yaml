@@ -1,0 +1,16 @@
+{{- if .Values.clusterRoleBinding.enabled }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "kairoscloud-chart.fullname" . }}-clusterrolebinding
+  labels:
+    {{- include "kairoscloud-chart.labels" . | nindent 4 }}
+  {{- with .Values.clusterRoleBinding.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+roleRef:
+  {{- toYaml .Values.clusterRoleBinding.roleRef | nindent 2 }}
+subjects:
+  {{- toYaml .Values.clusterRoleBinding.subjects | nindent 2 }}
+{{- end }}

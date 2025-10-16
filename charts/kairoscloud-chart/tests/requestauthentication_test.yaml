@@ -1,0 +1,136 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: requestauthentication
+templates:
+  - istio/requestauthentication.yaml
+tests:
+  - it: should create requestauthentication with basic configuration
+    set:
+      istio:
+        enabled: true
+        requestAuthentication:
+          enabled: true
+          jwtRules:
+            - issuer: "https://example.com"
+              jwksUri: "https://example.com/.well-known/jwks.json"
+              audiences: ["api"]
+    asserts:
+      - isKind:
+          of: RequestAuthentication
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-kairoscloud-chart
+      - equal:
+          path: spec.jwtRules[0].issuer
+          value: "https://example.com"
+      - equal:
+          path: spec.jwtRules[0].audiences[0]
+          value: "api"
+
+  - it: should create requestauthentication with default selector
+    set:
+      istio:
+        enabled: true
+        requestAuthentication:
+          enabled: true
+          jwtRules: []
+    asserts:
+      - isKind:
+          of: RequestAuthentication
+
+  - it: should create requestauthentication with custom selector
+    set:
+      istio:
+        enabled: true
+        requestAuthentication:
+          enabled: true
+          jwtRules: []
+          selector:
+            matchLabels:
+              app: custom-app
+    asserts:
+      - isKind:
+          of: RequestAuthentication
+      - equal:
+          path: spec.selector.matchLabels.app
+          value: custom-app
+
+  - it: should create requestauthentication with annotations
+    set:
+      istio:
+        enabled: true
+        requestAuthentication:
+          enabled: true
+          jwtRules: []
+          annotations:
+            test-annotation: "test-value"
+    asserts:
+      - isKind:
+          of: RequestAuthentication
+      - equal:
+          path: metadata.annotations.test-annotation
+          value: "test-value"
+
+  - it: should create requestauthentication with multiple jwt rules
+    set:
+      istio:
+        enabled: true
+        requestAuthentication:
+          enabled: true
+          jwtRules:
+            - issuer: "https://auth1.example.com"
+              jwksUri: "https://auth1.example.com/.well-known/jwks.json"
+              audiences: ["api1"]
+            - issuer: "https://auth2.example.com"
+              jwksUri: "https://auth2.example.com/.well-known/jwks.json"
+              audiences: ["api2"]
+    asserts:
+      - isKind:
+          of: RequestAuthentication
+      - equal:
+          path: spec.jwtRules[0].issuer
+          value: "https://auth1.example.com"
+      - equal:
+          path: spec.jwtRules[1].issuer
+          value: "https://auth2.example.com"
+
+  - it: should create requestauthentication with jwt rule from jwks
+    set:
+      istio:
+        enabled: true
+        requestAuthentication:
+          enabled: true
+          jwtRules:
+            - issuer: "https://example.com"
+              jwks: |
+                {
+                  "keys": [
+                    {
+                      "kty": "RSA",
+                      "kid": "key1",
+                      "use": "sig",
+                      "n": "...",
+                      "e": "AQAB"
+                    }
+                  ]
+                }
+              audiences: ["api"]
+    asserts:
+      - isKind:
+          of: RequestAuthentication
+      - equal:
+          path: spec.jwtRules[0].issuer
+          value: "https://example.com"
+      - equal:
+          path: spec.jwtRules[0].jwks
+          value: |
+            {
+              "keys": [
+                {
+                  "kty": "RSA",
+                  "kid": "key1",
+                  "use": "sig",
+                  "n": "...",
+                  "e": "AQAB"
+                }
+              ]
+            }

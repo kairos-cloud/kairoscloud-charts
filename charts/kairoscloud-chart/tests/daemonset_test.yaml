@@ -1,0 +1,366 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: daemonset
+templates:
+  - core/daemonset.yaml
+tests:
+  - it: should create daemonset with basic configuration
+    set:
+      deployment:
+        enabled: false
+      statefulset:
+        enabled: false
+      daemonset:
+        enabled: true
+        updateStrategy:
+          type: RollingUpdate
+        image:
+          repository: nginx
+          tag: "1.21"
+          pullPolicy: IfNotPresent
+    asserts:
+      - isKind:
+          of: DaemonSet
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-kairoscloud-chart
+      - equal:
+          path: spec.updateStrategy.type
+          value: RollingUpdate
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: nginx:1.21
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: kairoscloud-chart
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 8080
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].name
+          value: http
+
+  - it: should create daemonset with custom image
+    set:
+      deployment:
+        enabled: false
+      statefulset:
+        enabled: false
+      daemonset:
+        enabled: true
+        image:
+          repository: myregistry/kairoscloud
+          tag: v2.0.0
+          pullPolicy: Always
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: myregistry/kairoscloud:v2.0.0
+      - equal:
+          path: spec.template.spec.containers[0].imagePullPolicy
+          value: Always
+
+  - it: should create daemonset with custom update strategy
+    set:
+      deployment:
+        enabled: false
+      statefulset:
+        enabled: false
+      daemonset:
+        enabled: true
+        updateStrategy:
+          type: OnDelete
+    asserts:
+      - equal:
+          path: spec.updateStrategy.type
+          value: OnDelete
+
+  - it: should create daemonset with resources
+    set:
+      deployment:
+        enabled: false
+      statefulset:
+        enabled: false
+      daemonset:
+        enabled: true
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+          requests:
+            cpu: 500m
+            memory: 512Mi
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.cpu
+          value: 1000m
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: 1Gi
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: 500m
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.memory
+          value: 512Mi
+
+  - it: should create daemonset with extra volumes and volume mounts
+    set:
+      deployment:
+        enabled: false
+      statefulset:
+        enabled: false
+      daemonset:
+        enabled: true
+        extraVolumes:
+          - name: config-volume
+            configMap:
+              name: my-config
+        extraVolumeMounts:
+          - name: config-volume
+            mountPath: /etc/config
+    asserts:
+      - equal:
+          path: spec.template.spec.volumes[0].name
+          value: config-volume
+      - equal:
+          path: spec.template.spec.volumes[0].configMap.name
+          value: my-config
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].name
+          value: config-volume
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: /etc/config
+
+  - it: should create daemonset with environment variables
+    set:
+      deployment:
+        enabled: false
+      statefulset:
+        enabled: false
+      daemonset:
+        enabled: true
+        env:
+          - name: ENV_VAR_1
+            value: value1
+          - name: ENV_VAR_2
+            value: value2
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[0].name
+          value: ENV_VAR_1
+      - equal:
+          path: spec.template.spec.containers[0].env[0].value
+          value: value1
+      - equal:
+          path: spec.template.spec.containers[0].env[1].name
+          value: ENV_VAR_2
+      - equal:
+          path: spec.template.spec.containers[0].env[1].value
+          value: value2
+
+  - it: should create daemonset with probes enabled
+    set:
+      deployment:
+        enabled: false
+      statefulset:
+        enabled: false
+      daemonset:
+        enabled: true
+        livenessProbe:
+          enabled: true
+          httpGet:
+            path: /health
+            port: http
+        readinessProbe:
+          enabled: true
+          httpGet:
+            path: /ready
+            port: http
+        startupProbe:
+          enabled: true
+          httpGet:
+            path: /startup
+            port: http
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /health
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
+          value: /ready
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.httpGet.path
+          value: /startup
+
+  - it: should create daemonset with node selector and affinity
+    set:
+      deployment:
+        enabled: false
+      statefulset:
+        enabled: false
+      daemonset:
+        enabled: true
+        nodeSelector:
+          kubernetes.io/os: linux
+        affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+                - matchExpressions:
+                    - key: kubernetes.io/arch
+                      operator: In
+                      values:
+                        - amd64
+    asserts:
+      - isAPIVersion:
+          of: apps/v1
+
+  - it: should create daemonset with tolerations
+    set:
+      deployment:
+        enabled: false
+      statefulset:
+        enabled: false
+      daemonset:
+        enabled: true
+        tolerations:
+          - key: key1
+            operator: Equal
+            value: value1
+            effect: NoSchedule
+          - key: key2
+            operator: Exists
+            effect: NoExecute
+    asserts:
+      - equal:
+          path: spec.template.spec.tolerations[0].key
+          value: key1
+      - equal:
+          path: spec.template.spec.tolerations[0].operator
+          value: Equal
+      - equal:
+          path: spec.template.spec.tolerations[1].key
+          value: key2
+      - equal:
+          path: spec.template.spec.tolerations[1].operator
+          value: Exists
+
+  - it: should create daemonset with image pull secrets
+    set:
+      deployment:
+        enabled: false
+      statefulset:
+        enabled: false
+      daemonset:
+        enabled: true
+        imagePullSecrets:
+          - name: my-registry-secret
+          - name: another-secret
+    asserts:
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0].name
+          value: my-registry-secret
+      - equal:
+          path: spec.template.spec.imagePullSecrets[1].name
+          value: another-secret
+
+  - it: should create daemonset with pod annotations
+    set:
+      deployment:
+        enabled: false
+      statefulset:
+        enabled: false
+      daemonset:
+        enabled: true
+        podAnnotations:
+          prometheus.io/scrape: "true"
+          prometheus.io/port: "8080"
+    asserts:
+      - isAPIVersion:
+          of: apps/v1
+
+  - it: should create daemonset with init containers
+    set:
+      deployment:
+        enabled: false
+      statefulset:
+        enabled: false
+      daemonset:
+        enabled: true
+        initContainers:
+          - name: init-container
+            image: busybox:1.35
+            command: ['sh', '-c', 'echo "Init container running"']
+          - name: another-init
+            image: alpine:3.18
+            command: ['sh', '-c', 'echo "Another init container"']
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: init-container
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: busybox:1.35
+      - equal:
+          path: spec.template.spec.initContainers[1].name
+          value: another-init
+      - equal:
+          path: spec.template.spec.initContainers[1].image
+          value: alpine:3.18
+
+  - it: should create daemonset with default empty podSecurityContext
+    set:
+      deployment:
+        enabled: false
+      statefulset:
+        enabled: false
+      daemonset:
+        enabled: true
+        image:
+          repository: nginx
+    asserts:
+      - isKind:
+          of: DaemonSet
+      - equal:
+          path: spec.template.spec.securityContext
+          value: {}
+
+  - it: should create daemonset with explicit podSecurityContext configuration
+    set:
+      deployment:
+        enabled: false
+      statefulset:
+        enabled: false
+      daemonset:
+        enabled: true
+        image:
+          repository: nginx
+        podSecurityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          fsGroup: 2000
+    asserts:
+      - isKind:
+          of: DaemonSet
+      - equal:
+          path: spec.template.spec.securityContext.runAsNonRoot
+          value: true
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 1000
+      - equal:
+          path: spec.template.spec.securityContext.fsGroup
+          value: 2000
+
+  - it: should not create daemonset when disabled
+    set:
+      deployment:
+        enabled: false
+      statefulset:
+        enabled: false
+      daemonset:
+        enabled: false
+    asserts:
+      - isNull:
+          path: kind

@@ -1,0 +1,96 @@
+{{- if and .Values.chaosMesh.enabled (and .Values.chaosMesh.workflow .Values.chaosMesh.workflow.enabled) }}
+apiVersion: chaos-mesh.org/v1alpha1
+kind: Workflow
+metadata:
+  name: {{ include "kairoscloud-chart.fullname" . }}-workflow
+  labels:
+    {{- include "kairoscloud-chart.labels" . | nindent 4 }}
+  {{- with .Values.chaosMesh.workflow.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  entry: {{ .Values.chaosMesh.workflow.entry | default "entry" }}
+  templates:
+    {{- range $template := .Values.chaosMesh.workflow.templates }}
+    - name: {{ $template.name }}
+      templateType: {{ $template.type }}
+      {{- if $template.deadline }}
+      deadline: {{ $template.deadline }}
+      {{- end }}
+      {{- if $template.children }}
+      children:
+        {{- toYaml $template.children | nindent 8 }}
+      {{- end }}
+      {{- if $template.task }}
+      task:
+        {{- if $template.task.container }}
+        container:
+          {{- toYaml $template.task.container | nindent 10 }}
+        {{- end }}
+        {{- if $template.task.volumes }}
+        volumes:
+          {{- toYaml $template.task.volumes | nindent 10 }}
+        {{- end }}
+      {{- end }}
+      {{- if $template.conditionalBranches }}
+      conditionalBranches:
+        {{- toYaml $template.conditionalBranches | nindent 8 }}
+      {{- end }}
+      {{- if $template.awsChaos }}
+      awsChaos:
+        {{- toYaml $template.awsChaos | nindent 8 }}
+      {{- end }}
+      {{- if $template.dnsChaos }}
+      dnsChaos:
+        {{- toYaml $template.dnsChaos | nindent 8 }}
+      {{- end }}
+      {{- if $template.gcpChaos }}
+      gcpChaos:
+        {{- toYaml $template.gcpChaos | nindent 8 }}
+      {{- end }}
+      {{- if $template.httpChaos }}
+      httpChaos:
+        {{- toYaml $template.httpChaos | nindent 8 }}
+      {{- end }}
+      {{- if $template.ioChaos }}
+      ioChaos:
+        {{- toYaml $template.ioChaos | nindent 8 }}
+      {{- end }}
+      {{- if $template.jvmChaos }}
+      jvmChaos:
+        {{- toYaml $template.jvmChaos | nindent 8 }}
+      {{- end }}
+      {{- if $template.kernelChaos }}
+      kernelChaos:
+        {{- toYaml $template.kernelChaos | nindent 8 }}
+      {{- end }}
+      {{- if $template.networkChaos }}
+      networkChaos:
+        {{- toYaml $template.networkChaos | nindent 8 }}
+      {{- end }}
+      {{- if $template.podChaos }}
+      podChaos:
+        {{- toYaml $template.podChaos | nindent 8 }}
+      {{- end }}
+      {{- if $template.stressChaos }}
+      stressChaos:
+        {{- toYaml $template.stressChaos | nindent 8 }}
+      {{- end }}
+      {{- if $template.timeChaos }}
+      timeChaos:
+        {{- toYaml $template.timeChaos | nindent 8 }}
+      {{- end }}
+      {{- if $template.schedule }}
+      schedule:
+        {{- toYaml $template.schedule | nindent 8 }}
+      {{- end }}
+      {{- if $template.statusCheck }}
+      statusCheck:
+        {{- toYaml $template.statusCheck | nindent 8 }}
+      {{- end }}
+      {{- if $template.abortWithStatusCheck }}
+      abortWithStatusCheck: {{ $template.abortWithStatusCheck }}
+      {{- end }}
+    {{- end }}
+{{- end }}

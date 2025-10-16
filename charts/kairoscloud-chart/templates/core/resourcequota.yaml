@@ -1,0 +1,23 @@
+{{- if .Values.resourceQuota.enabled }}
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: {{ include "kairoscloud-chart.fullname" . }}-quota
+  labels:
+    {{- include "kairoscloud-chart.labels" . | nindent 4 }}
+  {{- with .Values.resourceQuota.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  hard:
+    {{- toYaml .Values.resourceQuota.hard | nindent 4 }}
+  {{- if .Values.resourceQuota.scopeSelector }}
+  scopeSelector:
+    {{- toYaml .Values.resourceQuota.scopeSelector | nindent 4 }}
+  {{- end }}
+  {{- if .Values.resourceQuota.scopes }}
+  scopes:
+    {{- toYaml .Values.resourceQuota.scopes | nindent 4 }}
+  {{- end }}
+{{- end }}

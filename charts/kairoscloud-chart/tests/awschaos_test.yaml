@@ -1,0 +1,118 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: awschaos
+templates:
+  - chaos-mesh/awschaos.yaml
+tests:
+  - it: should create awschaos with basic configuration
+    set:
+      chaosMesh:
+        enabled: true
+        awsChaos:
+          enabled: true
+          action: "ec2-stop"
+          awsRegion: "us-west-2"
+          ec2Instance: "i-1234567890abcdef0"
+          duration: "60s"
+    asserts:
+      - isKind:
+          of: AWSChaos
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-kairoscloud-chart-aws-chaos
+      - equal:
+          path: spec.action
+          value: "ec2-stop"
+      - equal:
+          path: spec.awsRegion
+          value: "us-west-2"
+      - equal:
+          path: spec.ec2Instance
+          value: "i-1234567890abcdef0"
+      - equal:
+          path: spec.duration
+          value: "60s"
+
+  - it: should create awschaos with ec2-restart action
+    set:
+      chaosMesh:
+        enabled: true
+        awsChaos:
+          enabled: true
+          action: "ec2-restart"
+          awsRegion: "us-east-1"
+          ec2Instance: "i-0987654321fedcba0"
+    asserts:
+      - equal:
+          path: spec.action
+          value: "ec2-restart"
+      - equal:
+          path: spec.awsRegion
+          value: "us-east-1"
+      - equal:
+          path: spec.ec2Instance
+          value: "i-0987654321fedcba0"
+
+  - it: should create awschaos with detach-volume action
+    set:
+      chaosMesh:
+        enabled: true
+        awsChaos:
+          enabled: true
+          action: "detach-volume"
+          awsRegion: "eu-west-1"
+          ec2Instance: "i-abcdef1234567890"
+    asserts:
+      - equal:
+          path: spec.action
+          value: "detach-volume"
+      - equal:
+          path: spec.awsRegion
+          value: "eu-west-1"
+      - equal:
+          path: spec.ec2Instance
+          value: "i-abcdef1234567890"
+
+  - it: should create awschaos with custom selector
+    set:
+      chaosMesh:
+        enabled: true
+        awsChaos:
+          enabled: true
+          selector:
+            namespaces:
+              - custom-namespace
+            labelSelectors:
+              app: test-app
+    asserts:
+      - equal:
+          path: spec.selector.namespaces[0]
+          value: custom-namespace
+      - equal:
+          path: spec.selector.labelSelectors.app
+          value: test-app
+
+  - it: should create awschaos with secret name
+    set:
+      chaosMesh:
+        enabled: true
+        awsChaos:
+          enabled: true
+          secretName: "aws-credentials"
+    asserts:
+      - equal:
+          path: spec.secretName
+          value: "aws-credentials"
+
+  - it: should create awschaos with annotations
+    set:
+      chaosMesh:
+        enabled: true
+        awsChaos:
+          enabled: true
+          annotations:
+            test-annotation: "test-value"
+    asserts:
+      - equal:
+          path: metadata.annotations.test-annotation
+          value: "test-value"
+

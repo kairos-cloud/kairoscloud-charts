@@ -1,0 +1,24 @@
+{{- if and .Values.istio.enabled .Values.istio.gateway.enabled }}
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: {{ include "kairoscloud-chart.fullname" . }}
+  labels:
+    {{- include "kairoscloud-chart.labels" . | nindent 4 }}
+  {{- with .Values.istio.gateway.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.istio.gateway.selector }}
+  selector:
+    {{- toYaml .Values.istio.gateway.selector | nindent 4 }}
+  {{- else }}
+  selector:
+    istio: ingressgateway
+  {{- end }}
+  {{- if .Values.istio.gateway.servers }}
+  servers:
+    {{- toYaml .Values.istio.gateway.servers | nindent 4 }}
+  {{- end }}
+{{- end }}

@@ -1,0 +1,27 @@
+{{- if and .Values.chaosMesh.enabled (and .Values.chaosMesh.kernelChaos .Values.chaosMesh.kernelChaos.enabled) }}
+apiVersion: chaos-mesh.org/v1alpha1
+kind: KernelChaos
+metadata:
+  name: {{ include "kairoscloud-chart.fullname" . }}-kernel-chaos
+  labels:
+    {{- include "kairoscloud-chart.labels" . | nindent 4 }}
+  {{- with .Values.chaosMesh.kernelChaos.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  mode: {{ .Values.chaosMesh.kernelChaos.mode | default "one" }}
+  selector:
+    {{- if .Values.chaosMesh.kernelChaos.selector }}
+    {{- toYaml .Values.chaosMesh.kernelChaos.selector | nindent 4 }}
+    {{- else }}
+    namespaces:
+      - {{ .Release.Namespace }}
+    labelSelectors:
+      app.kubernetes.io/name: {{ include "kairoscloud-chart.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- end }}
+  duration: {{ .Values.chaosMesh.kernelChaos.duration | default "30s" }}
+  failKernRequest:
+    {{- toYaml .Values.chaosMesh.kernelChaos.failKernRequest | nindent 4 }}
+{{- end }}

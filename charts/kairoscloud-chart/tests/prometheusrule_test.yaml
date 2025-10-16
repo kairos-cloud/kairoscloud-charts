@@ -1,0 +1,294 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: prometheusrule
+templates:
+  - core/prometheusrule.yaml
+tests:
+  - it: should create prometheusrule with basic configuration
+    set:
+      prometheusRule:
+        enabled: true
+        groups:
+          - name: kairoscloud.rules
+            rules:
+              - alert: KairosCloudDown
+                expr: up{job="kairoscloud"} == 0
+                for: 1m
+                labels:
+                  severity: critical
+                annotations:
+                  summary: "KairosCloud instance is down"
+    asserts:
+      - isKind:
+          of: PrometheusRule
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-kairoscloud-chart-rules
+      - equal:
+          path: spec.groups[0].name
+          value: kairoscloud.rules
+      - equal:
+          path: spec.groups[0].rules[0].alert
+          value: KairosCloudDown
+      - equal:
+          path: spec.groups[0].rules[0].expr
+          value: up{job="kairoscloud"} == 0
+      - equal:
+          path: spec.groups[0].rules[0].for
+          value: 1m
+      - equal:
+          path: spec.groups[0].rules[0].labels.severity
+          value: critical
+      - equal:
+          path: spec.groups[0].rules[0].annotations.summary
+          value: "KairosCloud instance is down"
+
+  - it: should create prometheusrule with multiple groups
+    set:
+      prometheusRule:
+        enabled: true
+        groups:
+          - name: kairoscloud.rules
+            interval: 30s
+            rules:
+              - alert: KairosCloudDown
+                expr: up{job="kairoscloud"} == 0
+                for: 1m
+                labels:
+                  severity: critical
+                annotations:
+                  summary: "KairosCloud instance is down"
+          - name: resource.rules
+            interval: 60s
+            rules:
+              - alert: HighMemoryUsage
+                expr: (container_memory_usage_bytes{name="kairoscloud"} / container_spec_memory_limit_bytes) * 100 > 80
+                for: 5m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: "High memory usage detected"
+    asserts:
+      - equal:
+          path: spec.groups[0].name
+          value: kairoscloud.rules
+      - equal:
+          path: spec.groups[0].interval
+          value: 30s
+      - equal:
+          path: spec.groups[0].rules[0].alert
+          value: KairosCloudDown
+      - equal:
+          path: spec.groups[1].name
+          value: resource.rules
+      - equal:
+          path: spec.groups[1].interval
+          value: 60s
+      - equal:
+          path: spec.groups[1].rules[0].alert
+          value: HighMemoryUsage
+
+  - it: should create prometheusrule with multiple rules in one group
+    set:
+      prometheusRule:
+        enabled: true
+        groups:
+          - name: kairoscloud.rules
+            rules:
+              - alert: KairosCloudDown
+                expr: up{job="kairoscloud"} == 0
+                for: 1m
+                labels:
+                  severity: critical
+                annotations:
+                  summary: "KairosCloud instance is down"
+              - alert: HighCPUUsage
+                expr: rate(container_cpu_usage_seconds_total{name="kairoscloud"}[5m]) * 100 > 80
+                for: 3m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: "High CPU usage detected"
+              - alert: PodCrashLooping
+                expr: rate(kube_pod_container_status_restarts_total{container="kairoscloud"}[15m]) > 0
+                for: 2m
+                labels:
+                  severity: critical
+                annotations:
+                  summary: "Pod is crash looping"
+    asserts:
+      - equal:
+          path: spec.groups[0].name
+          value: kairoscloud.rules
+      - equal:
+          path: spec.groups[0].rules[0].alert
+          value: KairosCloudDown
+      - equal:
+          path: spec.groups[0].rules[0].labels.severity
+          value: critical
+      - equal:
+          path: spec.groups[0].rules[1].alert
+          value: HighCPUUsage
+      - equal:
+          path: spec.groups[0].rules[1].labels.severity
+          value: warning
+      - equal:
+          path: spec.groups[0].rules[2].alert
+          value: PodCrashLooping
+      - equal:
+          path: spec.groups[0].rules[2].labels.severity
+          value: critical
+
+  - it: should create prometheusrule with labels and annotations
+    set:
+      prometheusRule:
+        enabled: true
+        labels:
+          app.kubernetes.io/component: monitoring
+          prometheus: kube-prometheus
+        annotations:
+          description: "Prometheus rules for KairosCloud monitoring"
+        groups:
+          - name: kairoscloud.rules
+            rules:
+              - alert: KairosCloudDown
+                expr: up{job="kairoscloud"} == 0
+                for: 1m
+                labels:
+                  severity: critical
+                  team: platform
+                annotations:
+                  summary: "KairosCloud instance is down"
+                  description: "KairosCloud instance {{ $labels.instance }} has been down for more than 1 minute."
+                  runbook_url: "https://runbooks.example.com/kairoscloud-down"
+    asserts:
+      - equal:
+          path: metadata.labels["app.kubernetes.io/component"]
+          value: monitoring
+      - equal:
+          path: metadata.labels.prometheus
+          value: kube-prometheus
+      - equal:
+          path: metadata.annotations.description
+          value: "Prometheus rules for KairosCloud monitoring"
+      - equal:
+          path: spec.groups[0].rules[0].labels.severity
+          value: critical
+      - equal:
+          path: spec.groups[0].rules[0].labels.team
+          value: platform
+      - equal:
+          path: spec.groups[0].rules[0].annotations.summary
+          value: "KairosCloud instance is down"
+      - equal:
+          path: spec.groups[0].rules[0].annotations.description
+          value: "KairosCloud instance {{ $labels.instance }} has been down for more than 1 minute."
+      - equal:
+          path: spec.groups[0].rules[0].annotations.runbook_url
+          value: "https://runbooks.example.com/kairoscloud-down"
+
+  - it: should create prometheusrule with complex expressions
+    set:
+      prometheusRule:
+        enabled: true
+        groups:
+          - name: advanced.rules
+            rules:
+              - alert: HighErrorRate
+                expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) * 100 > 5
+                for: 2m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: "High error rate detected"
+              - alert: SlowResponseTime
+                expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1
+                for: 3m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: "Slow response time detected"
+              - alert: DiskSpaceLow
+                expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 10
+                for: 5m
+                labels:
+                  severity: critical
+                annotations:
+                  summary: "Disk space is running low"
+    asserts:
+      - equal:
+          path: spec.groups[0].name
+          value: advanced.rules
+      - equal:
+          path: spec.groups[0].rules[0].alert
+          value: HighErrorRate
+      - equal:
+          path: spec.groups[0].rules[0].expr
+          value: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) * 100 > 5
+      - equal:
+          path: spec.groups[0].rules[1].alert
+          value: SlowResponseTime
+      - equal:
+          path: spec.groups[0].rules[1].expr
+          value: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1
+      - equal:
+          path: spec.groups[0].rules[2].alert
+          value: DiskSpaceLow
+      - equal:
+          path: spec.groups[0].rules[2].expr
+          value: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 10
+
+  - it: should create prometheusrule with different severity levels
+    set:
+      prometheusRule:
+        enabled: true
+        groups:
+          - name: severity.rules
+            rules:
+              - alert: CriticalAlert
+                expr: up{job="critical-service"} == 0
+                for: 30s
+                labels:
+                  severity: critical
+                annotations:
+                  summary: "Critical service is down"
+              - alert: WarningAlert
+                expr: cpu_usage_percent > 80
+                for: 5m
+                labels:
+                  severity: warning
+                annotations:
+                  summary: "High CPU usage"
+              - alert: InfoAlert
+                expr: memory_usage_percent > 60
+                for: 10m
+                labels:
+                  severity: info
+                annotations:
+                  summary: "Memory usage is elevated"
+    asserts:
+      - equal:
+          path: spec.groups[0].rules[0].labels.severity
+          value: critical
+      - equal:
+          path: spec.groups[0].rules[0].for
+          value: 30s
+      - equal:
+          path: spec.groups[0].rules[1].labels.severity
+          value: warning
+      - equal:
+          path: spec.groups[0].rules[1].for
+          value: 5m
+      - equal:
+          path: spec.groups[0].rules[2].labels.severity
+          value: info
+      - equal:
+          path: spec.groups[0].rules[2].for
+          value: 10m
+
+  - it: should not create prometheusrule when disabled
+    set:
+      prometheusRule:
+        enabled: false
+    asserts:
+      - isNull:
+          path: kind

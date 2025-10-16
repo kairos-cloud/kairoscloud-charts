@@ -1,0 +1,204 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: networkchaos
+templates:
+  - chaos-mesh/networkchaos.yaml
+tests:
+  - it: should create networkchaos with basic configuration
+    set:
+      chaosMesh:
+        enabled: true
+        networkChaos:
+          enabled: true
+          action: "delay"
+          delay:
+            latency: "10ms"
+            correlation: "100"
+            jitter: "0ms"
+          duration: "60s"
+    asserts:
+      - isKind:
+          of: NetworkChaos
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-kairoscloud-chart-network-chaos
+      - equal:
+          path: spec.action
+          value: "delay"
+      - equal:
+          path: spec.delay.latency
+          value: "10ms"
+      - equal:
+          path: spec.delay.correlation
+          value: "100"
+      - equal:
+          path: spec.delay.jitter
+          value: "0ms"
+
+  - it: should create networkchaos with loss action
+    set:
+      chaosMesh:
+        enabled: true
+        networkChaos:
+          enabled: true
+          action: "loss"
+          loss:
+            loss: "25%"
+            correlation: "100"
+    asserts:
+      - equal:
+          path: spec.action
+          value: "loss"
+      - equal:
+          path: spec.loss.loss
+          value: "25%"
+      - equal:
+          path: spec.loss.correlation
+          value: "100"
+
+  - it: should create networkchaos with duplicate action
+    set:
+      chaosMesh:
+        enabled: true
+        networkChaos:
+          enabled: true
+          action: "duplicate"
+          duplicate:
+            duplicate: "10%"
+            correlation: "100"
+    asserts:
+      - equal:
+          path: spec.action
+          value: "duplicate"
+      - equal:
+          path: spec.duplicate.duplicate
+          value: "10%"
+      - equal:
+          path: spec.duplicate.correlation
+          value: "100"
+
+  - it: should create networkchaos with corrupt action
+    set:
+      chaosMesh:
+        enabled: true
+        networkChaos:
+          enabled: true
+          action: "corrupt"
+          corrupt:
+            corrupt: "5%"
+            correlation: "100"
+    asserts:
+      - equal:
+          path: spec.action
+          value: "corrupt"
+      - equal:
+          path: spec.corrupt.corrupt
+          value: "5%"
+      - equal:
+          path: spec.corrupt.correlation
+          value: "100"
+
+  - it: should create networkchaos with bandwidth action
+    set:
+      chaosMesh:
+        enabled: true
+        networkChaos:
+          enabled: true
+          action: "bandwidth"
+          bandwidth:
+            rate: "1mbps"
+            limit: 2097152
+            buffer: 16000
+    asserts:
+      - equal:
+          path: spec.action
+          value: "bandwidth"
+      - equal:
+          path: spec.bandwidth.rate
+          value: "1mbps"
+      - equal:
+          path: spec.bandwidth.limit
+          value: 2097152
+      - equal:
+          path: spec.bandwidth.buffer
+          value: 16000
+
+  - it: should create networkchaos with custom selector
+    set:
+      chaosMesh:
+        enabled: true
+        networkChaos:
+          enabled: true
+          selector:
+            namespaces:
+              - custom-namespace
+            labelSelectors:
+              app: test-app
+    asserts:
+      - equal:
+          path: spec.selector.namespaces[0]
+          value: custom-namespace
+      - equal:
+          path: spec.selector.labelSelectors.app
+          value: test-app
+
+  - it: should create networkchaos with direction
+    set:
+      chaosMesh:
+        enabled: true
+        networkChaos:
+          enabled: true
+          direction: "to"
+    asserts:
+      - equal:
+          path: spec.direction
+          value: "to"
+
+  - it: should create networkchaos with external targets
+    set:
+      chaosMesh:
+        enabled: true
+        networkChaos:
+          enabled: true
+          externalTargets:
+            - "8.8.8.8"
+            - "1.1.1.1"
+    asserts:
+      - equal:
+          path: spec.externalTargets[0]
+          value: "8.8.8.8"
+      - equal:
+          path: spec.externalTargets[1]
+          value: "1.1.1.1"
+
+  - it: should create networkchaos with target selector
+    set:
+      chaosMesh:
+        enabled: true
+        networkChaos:
+          enabled: true
+          target:
+            namespaces:
+              - target-namespace
+            labelSelectors:
+              app: target-app
+    asserts:
+      - equal:
+          path: spec.target.namespaces[0]
+          value: "target-namespace"
+      - equal:
+          path: spec.target.labelSelectors.app
+          value: "target-app"
+
+  - it: should create networkchaos with annotations
+    set:
+      chaosMesh:
+        enabled: true
+        networkChaos:
+          enabled: true
+          annotations:
+            test-annotation: "test-value"
+    asserts:
+      - equal:
+          path: metadata.annotations.test-annotation
+          value: "test-value"
+

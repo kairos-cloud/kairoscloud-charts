@@ -1,0 +1,57 @@
+{{- if and .Values.chaosMesh.enabled (and .Values.chaosMesh.networkChaos .Values.chaosMesh.networkChaos.enabled) }}
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: {{ include "kairoscloud-chart.fullname" . }}-network-chaos
+  labels:
+    {{- include "kairoscloud-chart.labels" . | nindent 4 }}
+  {{- with .Values.chaosMesh.networkChaos.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  mode: {{ .Values.chaosMesh.networkChaos.mode | default "one" }}
+  selector:
+    {{- if .Values.chaosMesh.networkChaos.selector }}
+    {{- toYaml .Values.chaosMesh.networkChaos.selector | nindent 4 }}
+    {{- else }}
+    namespaces:
+      - {{ .Release.Namespace }}
+    labelSelectors:
+      app.kubernetes.io/name: {{ include "kairoscloud-chart.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- end }}
+  duration: {{ .Values.chaosMesh.networkChaos.duration | default "30s" }}
+  action: {{ .Values.chaosMesh.networkChaos.action | default "delay" }}
+  {{- if .Values.chaosMesh.networkChaos.delay }}
+  delay:
+    {{- toYaml .Values.chaosMesh.networkChaos.delay | nindent 4 }}
+  {{- end }}
+  {{- if .Values.chaosMesh.networkChaos.loss }}
+  loss:
+    {{- toYaml .Values.chaosMesh.networkChaos.loss | nindent 4 }}
+  {{- end }}
+  {{- if .Values.chaosMesh.networkChaos.duplicate }}
+  duplicate:
+    {{- toYaml .Values.chaosMesh.networkChaos.duplicate | nindent 4 }}
+  {{- end }}
+  {{- if .Values.chaosMesh.networkChaos.corrupt }}
+  corrupt:
+    {{- toYaml .Values.chaosMesh.networkChaos.corrupt | nindent 4 }}
+  {{- end }}
+  {{- if .Values.chaosMesh.networkChaos.bandwidth }}
+  bandwidth:
+    {{- toYaml .Values.chaosMesh.networkChaos.bandwidth | nindent 4 }}
+  {{- end }}
+  {{- if .Values.chaosMesh.networkChaos.direction }}
+  direction: {{ .Values.chaosMesh.networkChaos.direction }}
+  {{- end }}
+  {{- if .Values.chaosMesh.networkChaos.externalTargets }}
+  externalTargets:
+    {{- toYaml .Values.chaosMesh.networkChaos.externalTargets | nindent 4 }}
+  {{- end }}
+  {{- if .Values.chaosMesh.networkChaos.target }}
+  target:
+    {{- toYaml .Values.chaosMesh.networkChaos.target | nindent 4 }}
+  {{- end }}
+{{- end }}

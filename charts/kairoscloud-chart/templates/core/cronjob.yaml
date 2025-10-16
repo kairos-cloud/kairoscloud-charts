@@ -1,0 +1,98 @@
+{{- if .Values.cronJob.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "kairoscloud-chart.fullname" . }}-cronjob
+  labels:
+    {{- include "kairoscloud-chart.labels" . | nindent 4 }}
+  {{- with .Values.cronJob.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  schedule: {{ .Values.cronJob.schedule }}
+  {{- if .Values.cronJob.timeZone }}
+  timeZone: {{ .Values.cronJob.timeZone }}
+  {{- end }}
+  {{- if .Values.cronJob.concurrencyPolicy }}
+  concurrencyPolicy: {{ .Values.cronJob.concurrencyPolicy }}
+  {{- end }}
+  {{- if .Values.cronJob.failedJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ .Values.cronJob.failedJobsHistoryLimit }}
+  {{- end }}
+  {{- if .Values.cronJob.successfulJobsHistoryLimit }}
+  successfulJobsHistoryLimit: {{ .Values.cronJob.successfulJobsHistoryLimit }}
+  {{- end }}
+  {{- if or .Values.cronJob.suspend (eq .Values.cronJob.suspend false) }}
+  suspend: {{ .Values.cronJob.suspend }}
+  {{- end }}
+  jobTemplate:
+    metadata:
+      labels:
+        {{- include "kairoscloud-chart.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- if .Values.cronJob.activeDeadlineSeconds }}
+      activeDeadlineSeconds: {{ .Values.cronJob.activeDeadlineSeconds }}
+      {{- end }}
+      {{- if .Values.cronJob.backoffLimit }}
+      backoffLimit: {{ .Values.cronJob.backoffLimit }}
+      {{- end }}
+      {{- if .Values.cronJob.ttlSecondsAfterFinished }}
+      ttlSecondsAfterFinished: {{ .Values.cronJob.ttlSecondsAfterFinished }}
+      {{- end }}
+      template:
+        metadata:
+          labels:
+            {{- include "kairoscloud-chart.selectorLabels" . | nindent 12 }}
+        spec:
+          {{- with .Values.cronJob.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          serviceAccountName: {{ include "kairoscloud-chart.serviceAccountName" . }}
+          restartPolicy: {{ .Values.cronJob.restartPolicy | default "OnFailure" }}
+          {{- if .Values.cronJob.securityContext }}
+          securityContext:
+            {{- toYaml .Values.cronJob.securityContext | nindent 12 }}
+          {{- end }}
+          containers:
+            - name: {{ .Chart.Name }}-cronjob
+              image: "{{ .Values.cronJob.image.repository }}:{{ .Values.cronJob.image.tag | default .Chart.AppVersion }}"
+              imagePullPolicy: {{ .Values.cronJob.image.pullPolicy | default .Values.deployment.image.pullPolicy }}
+              {{- if .Values.cronJob.command }}
+              command:
+                {{- toYaml .Values.cronJob.command | nindent 16 }}
+              {{- end }}
+              {{- if .Values.cronJob.args }}
+              args:
+                {{- toYaml .Values.cronJob.args | nindent 16 }}
+              {{- end }}
+              {{- if .Values.cronJob.env }}
+              env:
+                {{- toYaml .Values.cronJob.env | nindent 16 }}
+              {{- end }}
+              {{- if .Values.cronJob.resources }}
+              resources:
+                {{- toYaml .Values.cronJob.resources | nindent 16 }}
+              {{- end }}
+              {{- if .Values.cronJob.volumeMounts }}
+              volumeMounts:
+                {{- toYaml .Values.cronJob.volumeMounts | nindent 16 }}
+              {{- end }}
+          {{- if .Values.cronJob.volumes }}
+          volumes:
+            {{- toYaml .Values.cronJob.volumes | nindent 12 }}
+          {{- end }}
+          {{- with .Values.cronJob.nodeSelector }}
+          nodeSelector:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.cronJob.affinity }}
+          affinity:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.cronJob.tolerations }}
+          tolerations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+{{- end }}

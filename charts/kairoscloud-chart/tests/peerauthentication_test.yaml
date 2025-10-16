@@ -1,0 +1,116 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: peerauthentication
+templates:
+  - istio/peerauthentication.yaml
+tests:
+  - it: should create peerauthentication with basic configuration
+    set:
+      istio:
+        enabled: true
+        peerAuthentication:
+          enabled: true
+          mtls:
+            mode: PERMISSIVE
+          portLevelMtls:
+            "8080":
+              mode: DISABLE
+    asserts:
+      - isKind:
+          of: PeerAuthentication
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-kairoscloud-chart
+      - equal:
+          path: spec.mtls.mode
+          value: PERMISSIVE
+      - equal:
+          path: spec.portLevelMtls.8080.mode
+          value: DISABLE
+
+  - it: should create peerauthentication with default selector
+    set:
+      istio:
+        enabled: true
+        peerAuthentication:
+          enabled: true
+          mtls:
+            mode: STRICT
+    asserts:
+      - isKind:
+          of: PeerAuthentication
+      - equal:
+          path: spec.mtls.mode
+          value: STRICT
+
+  - it: should create peerauthentication with custom selector
+    set:
+      istio:
+        enabled: true
+        peerAuthentication:
+          enabled: true
+          mtls:
+            mode: STRICT
+          selector:
+            matchLabels:
+              app: custom-app
+    asserts:
+      - isKind:
+          of: PeerAuthentication
+      - equal:
+          path: spec.selector.matchLabels.app
+          value: custom-app
+
+  - it: should create peerauthentication with annotations
+    set:
+      istio:
+        enabled: true
+        peerAuthentication:
+          enabled: true
+          mtls:
+            mode: STRICT
+          annotations:
+            test-annotation: "test-value"
+    asserts:
+      - isKind:
+          of: PeerAuthentication
+      - equal:
+          path: metadata.annotations.test-annotation
+          value: "test-value"
+
+  - it: should create peerauthentication with different mtls modes
+    set:
+      istio:
+        enabled: true
+        peerAuthentication:
+          enabled: true
+          mtls:
+            mode: DISABLE
+    asserts:
+      - isKind:
+          of: PeerAuthentication
+      - equal:
+          path: spec.mtls.mode
+          value: DISABLE
+
+  - it: should create peerauthentication with multiple port level mtls
+    set:
+      istio:
+        enabled: true
+        peerAuthentication:
+          enabled: true
+          mtls:
+            mode: STRICT
+          portLevelMtls:
+            "8080":
+              mode: DISABLE
+            "9090":
+              mode: PERMISSIVE
+    asserts:
+      - isKind:
+          of: PeerAuthentication
+      - equal:
+          path: spec.portLevelMtls.8080.mode
+          value: DISABLE
+      - equal:
+          path: spec.portLevelMtls.9090.mode
+          value: PERMISSIVE

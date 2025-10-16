@@ -1,0 +1,14 @@
+{{- if .Values.configMap.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "kairoscloud-chart.fullname" . }}-config
+  labels:
+    {{- include "kairoscloud-chart.labels" . | nindent 4 }}
+data:
+  {{- if .Values.configMap.data }}
+  {{- toYaml .Values.configMap.data | nindent 2 }}
+  {{- else }}
+  {}
+  {{- end }}
+{{- end }}

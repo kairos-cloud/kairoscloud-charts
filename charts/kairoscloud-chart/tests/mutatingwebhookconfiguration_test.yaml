@@ -1,0 +1,336 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: mutatingwebhookconfiguration
+templates:
+  - core/mutatingwebhookconfiguration.yaml
+tests:
+  - it: should create mutating webhook configuration with basic configuration
+    set:
+      mutatingWebhookConfiguration:
+        enabled: true
+        webhooks:
+          - name: example-mutating-webhook
+            clientConfig:
+              service:
+                name: webhook-service
+                namespace: default
+                path: /mutate
+                port: 443
+              caBundle: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t"
+            rules:
+              - operations: ["CREATE", "UPDATE"]
+                apiGroups: [""]
+                apiVersions: ["v1"]
+                resources: ["pods"]
+                scope: "Namespaced"
+            failurePolicy: Fail
+            sideEffects: None
+            admissionReviewVersions: ["v1"]
+    asserts:
+      - isKind:
+          of: MutatingWebhookConfiguration
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-kairoscloud-chart-mutating-webhook
+      - equal:
+          path: webhooks[0].name
+          value: example-mutating-webhook
+      - equal:
+          path: webhooks[0].clientConfig.service.name
+          value: webhook-service
+      - equal:
+          path: webhooks[0].clientConfig.service.namespace
+          value: default
+      - equal:
+          path: webhooks[0].clientConfig.service.path
+          value: /mutate
+      - equal:
+          path: webhooks[0].clientConfig.service.port
+          value: 443
+      - equal:
+          path: webhooks[0].clientConfig.caBundle
+          value: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t"
+      - equal:
+          path: webhooks[0].rules[0].operations[0]
+          value: CREATE
+      - equal:
+          path: webhooks[0].rules[0].operations[1]
+          value: UPDATE
+      - equal:
+          path: webhooks[0].rules[0].apiGroups[0]
+          value: ""
+      - equal:
+          path: webhooks[0].rules[0].apiVersions[0]
+          value: v1
+      - equal:
+          path: webhooks[0].rules[0].resources[0]
+          value: pods
+      - equal:
+          path: webhooks[0].rules[0].scope
+          value: Namespaced
+      - equal:
+          path: webhooks[0].failurePolicy
+          value: Fail
+      - equal:
+          path: webhooks[0].sideEffects
+          value: None
+      - equal:
+          path: webhooks[0].admissionReviewVersions[0]
+          value: v1
+
+  - it: should create mutating webhook configuration with URL client config
+    set:
+      mutatingWebhookConfiguration:
+        enabled: true
+        webhooks:
+          - name: url-webhook
+            clientConfig:
+              url: https://webhook.example.com/mutate
+              caBundle: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t"
+            rules:
+              - operations: ["CREATE"]
+                apiGroups: ["apps"]
+                apiVersions: ["v1"]
+                resources: ["deployments"]
+            failurePolicy: Ignore
+            sideEffects: NoneOnDryRun
+            admissionReviewVersions: ["v1", "v1beta1"]
+    asserts:
+      - equal:
+          path: webhooks[0].name
+          value: url-webhook
+      - equal:
+          path: webhooks[0].clientConfig.url
+          value: https://webhook.example.com/mutate
+      - equal:
+          path: webhooks[0].clientConfig.caBundle
+          value: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t"
+      - equal:
+          path: webhooks[0].failurePolicy
+          value: Ignore
+      - equal:
+          path: webhooks[0].sideEffects
+          value: NoneOnDryRun
+      - equal:
+          path: webhooks[0].admissionReviewVersions[0]
+          value: v1
+      - equal:
+          path: webhooks[0].admissionReviewVersions[1]
+          value: v1beta1
+
+  - it: should create mutating webhook configuration with namespace selector
+    set:
+      mutatingWebhookConfiguration:
+        enabled: true
+        webhooks:
+          - name: namespace-webhook
+            clientConfig:
+              service:
+                name: webhook-service
+                namespace: default
+                path: /mutate
+              caBundle: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t"
+            rules:
+              - operations: ["CREATE", "UPDATE"]
+                apiGroups: [""]
+                apiVersions: ["v1"]
+                resources: ["pods"]
+            namespaceSelector:
+              matchLabels:
+                webhook: enabled
+            failurePolicy: Fail
+            sideEffects: None
+            admissionReviewVersions: ["v1"]
+    asserts:
+      - equal:
+          path: webhooks[0].name
+          value: namespace-webhook
+      - equal:
+          path: webhooks[0].namespaceSelector.matchLabels.webhook
+          value: enabled
+
+  - it: should create mutating webhook configuration with object selector
+    set:
+      mutatingWebhookConfiguration:
+        enabled: true
+        webhooks:
+          - name: object-webhook
+            clientConfig:
+              service:
+                name: webhook-service
+                namespace: default
+                path: /mutate
+              caBundle: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t"
+            rules:
+              - operations: ["CREATE"]
+                apiGroups: [""]
+                apiVersions: ["v1"]
+                resources: ["pods"]
+            objectSelector:
+              matchLabels:
+                app: myapp
+            failurePolicy: Fail
+            sideEffects: None
+            admissionReviewVersions: ["v1"]
+    asserts:
+      - equal:
+          path: webhooks[0].name
+          value: object-webhook
+      - equal:
+          path: webhooks[0].objectSelector.matchLabels.app
+          value: myapp
+
+  - it: should create mutating webhook configuration with match policy and timeout
+    set:
+      mutatingWebhookConfiguration:
+        enabled: true
+        webhooks:
+          - name: advanced-webhook
+            clientConfig:
+              service:
+                name: webhook-service
+                namespace: default
+                path: /mutate
+              caBundle: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t"
+            rules:
+              - operations: ["CREATE", "UPDATE"]
+                apiGroups: [""]
+                apiVersions: ["v1"]
+                resources: ["pods"]
+            matchPolicy: Equivalent
+            timeoutSeconds: 30
+            failurePolicy: Fail
+            sideEffects: None
+            admissionReviewVersions: ["v1"]
+    asserts:
+      - equal:
+          path: webhooks[0].name
+          value: advanced-webhook
+      - equal:
+          path: webhooks[0].matchPolicy
+          value: Equivalent
+      - equal:
+          path: webhooks[0].timeoutSeconds
+          value: 30
+
+  - it: should create mutating webhook configuration with reinvocation policy
+    set:
+      mutatingWebhookConfiguration:
+        enabled: true
+        webhooks:
+          - name: reinvoke-webhook
+            clientConfig:
+              service:
+                name: webhook-service
+                namespace: default
+                path: /mutate
+              caBundle: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t"
+            rules:
+              - operations: ["CREATE", "UPDATE"]
+                apiGroups: [""]
+                apiVersions: ["v1"]
+                resources: ["pods"]
+            reinvocationPolicy: IfNeeded
+            failurePolicy: Fail
+            sideEffects: None
+            admissionReviewVersions: ["v1"]
+    asserts:
+      - equal:
+          path: webhooks[0].name
+          value: reinvoke-webhook
+      - equal:
+          path: webhooks[0].reinvocationPolicy
+          value: IfNeeded
+
+  - it: should create mutating webhook configuration with multiple webhooks
+    set:
+      mutatingWebhookConfiguration:
+        enabled: true
+        webhooks:
+          - name: webhook-1
+            clientConfig:
+              service:
+                name: webhook-service-1
+                namespace: default
+                path: /mutate1
+              caBundle: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t"
+            rules:
+              - operations: ["CREATE"]
+                apiGroups: [""]
+                apiVersions: ["v1"]
+                resources: ["pods"]
+            failurePolicy: Fail
+            sideEffects: None
+            admissionReviewVersions: ["v1"]
+          - name: webhook-2
+            clientConfig:
+              service:
+                name: webhook-service-2
+                namespace: default
+                path: /mutate2
+              caBundle: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t"
+            rules:
+              - operations: ["UPDATE"]
+                apiGroups: ["apps"]
+                apiVersions: ["v1"]
+                resources: ["deployments"]
+            failurePolicy: Ignore
+            sideEffects: NoneOnDryRun
+            admissionReviewVersions: ["v1"]
+    asserts:
+      - equal:
+          path: webhooks[0].name
+          value: webhook-1
+      - equal:
+          path: webhooks[0].clientConfig.service.name
+          value: webhook-service-1
+      - equal:
+          path: webhooks[0].clientConfig.service.path
+          value: /mutate1
+      - equal:
+          path: webhooks[1].name
+          value: webhook-2
+      - equal:
+          path: webhooks[1].clientConfig.service.name
+          value: webhook-service-2
+      - equal:
+          path: webhooks[1].clientConfig.service.path
+          value: /mutate2
+
+  - it: should create mutating webhook configuration with annotations
+    set:
+      mutatingWebhookConfiguration:
+        enabled: true
+        annotations:
+          cert-manager.io/inject-ca-from: "default/webhook-ca"
+          description: "Example mutating webhook"
+        webhooks:
+          - name: annotated-webhook
+            clientConfig:
+              service:
+                name: webhook-service
+                namespace: default
+                path: /mutate
+              caBundle: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t"
+            rules:
+              - operations: ["CREATE"]
+                apiGroups: [""]
+                apiVersions: ["v1"]
+                resources: ["pods"]
+            failurePolicy: Fail
+            sideEffects: None
+            admissionReviewVersions: ["v1"]
+    asserts:
+      - equal:
+          path: metadata.annotations["cert-manager.io/inject-ca-from"]
+          value: "default/webhook-ca"
+      - equal:
+          path: metadata.annotations.description
+          value: "Example mutating webhook"
+
+  - it: should not create mutating webhook configuration when disabled
+    set:
+      mutatingWebhookConfiguration:
+        enabled: false
+    asserts:
+      - isNull:
+          path: kind

@@ -1,0 +1,205 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: volumesnapshot
+templates:
+  - core/volumesnapshot.yaml
+tests:
+  - it: should not create volumesnapshot when disabled
+    set:
+      volumeSnapshot:
+        enabled: false
+    asserts:
+      - isNull:
+          path: metadata
+
+  - it: should create volumesnapshot with pvc source
+    set:
+      volumeSnapshot:
+        enabled: true
+        source:
+          persistentVolumeClaimName: "my-pvc"
+          volumeSnapshotContentName: ""
+        volumeSnapshotClassName: "csi-snapshotter"
+    asserts:
+      - isKind:
+          of: VolumeSnapshot
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-kairoscloud-chart-snapshot
+      - isAPIVersion:
+          of: snapshot.storage.k8s.io/v1
+      - equal:
+          path: spec.source.persistentVolumeClaimName
+          value: my-pvc
+      - equal:
+          path: spec.volumeSnapshotClassName
+          value: csi-snapshotter
+
+  - it: should create volumesnapshot with volume snapshot content source
+    set:
+      volumeSnapshot:
+        enabled: true
+        source:
+          persistentVolumeClaimName: ""
+          volumeSnapshotContentName: "my-snapshot-content"
+        volumeSnapshotClassName: "aws-ebs-snapshotter"
+    asserts:
+      - isKind:
+          of: VolumeSnapshot
+      - equal:
+          path: spec.source.volumeSnapshotContentName
+          value: my-snapshot-content
+      - equal:
+          path: spec.volumeSnapshotClassName
+          value: aws-ebs-snapshotter
+
+  - it: should create volumesnapshot without volume snapshot class
+    set:
+      volumeSnapshot:
+        enabled: true
+        source:
+          persistentVolumeClaimName: "my-pvc"
+          volumeSnapshotContentName: ""
+        volumeSnapshotClassName: ""
+    asserts:
+      - isKind:
+          of: VolumeSnapshot
+      - equal:
+          path: spec.source.persistentVolumeClaimName
+          value: my-pvc
+
+  - it: should create volumesnapshot with annotations
+    set:
+      volumeSnapshot:
+        enabled: true
+        annotations:
+          description: "Backup snapshot of the application data"
+          backup-type: "scheduled"
+          retention: "30d"
+        source:
+          persistentVolumeClaimName: "my-pvc"
+          volumeSnapshotContentName: ""
+        volumeSnapshotClassName: "csi-snapshotter"
+    asserts:
+      - isKind:
+          of: VolumeSnapshot
+      - equal:
+          path: metadata.annotations.description
+          value: "Backup snapshot of the application data"
+      - equal:
+          path: metadata.annotations.backup-type
+          value: "scheduled"
+      - equal:
+          path: metadata.annotations.retention
+          value: "30d"
+
+  - it: should create volumesnapshot with custom name
+    set:
+      fullnameOverride: "custom-app"
+      volumeSnapshot:
+        enabled: true
+        source:
+          persistentVolumeClaimName: "my-pvc"
+          volumeSnapshotContentName: ""
+        volumeSnapshotClassName: "csi-snapshotter"
+    asserts:
+      - isKind:
+          of: VolumeSnapshot
+      - equal:
+          path: metadata.name
+          value: custom-app-snapshot
+
+  - it: should create volumesnapshot with gcp snapshot class
+    set:
+      volumeSnapshot:
+        enabled: true
+        source:
+          persistentVolumeClaimName: "gcp-pvc"
+          volumeSnapshotContentName: ""
+        volumeSnapshotClassName: "gce-pd-snapshotter"
+    asserts:
+      - isKind:
+          of: VolumeSnapshot
+      - equal:
+          path: spec.source.persistentVolumeClaimName
+          value: gcp-pvc
+      - equal:
+          path: spec.volumeSnapshotClassName
+          value: gce-pd-snapshotter
+
+  - it: should create volumesnapshot with azure snapshot class
+    set:
+      volumeSnapshot:
+        enabled: true
+        source:
+          persistentVolumeClaimName: "azure-pvc"
+          volumeSnapshotContentName: ""
+        volumeSnapshotClassName: "azure-disk-snapshotter"
+    asserts:
+      - isKind:
+          of: VolumeSnapshot
+      - equal:
+          path: spec.source.persistentVolumeClaimName
+          value: azure-pvc
+      - equal:
+          path: spec.volumeSnapshotClassName
+          value: azure-disk-snapshotter
+
+  - it: should create volumesnapshot with backup annotations
+    set:
+      volumeSnapshot:
+        enabled: true
+        annotations:
+          description: "Backup snapshot of the application data"
+          backup-type: "scheduled"
+          retention: "30d"
+        source:
+          persistentVolumeClaimName: "backup-pvc"
+          volumeSnapshotContentName: ""
+        volumeSnapshotClassName: "csi-snapshotter"
+    asserts:
+      - isKind:
+          of: VolumeSnapshot
+      - equal:
+          path: metadata.annotations.description
+          value: "Backup snapshot of the application data"
+      - equal:
+          path: metadata.annotations.backup-type
+          value: "scheduled"
+      - equal:
+          path: metadata.annotations.retention
+          value: "30d"
+
+  - it: should create volumesnapshot with multiple source options
+    set:
+      volumeSnapshot:
+        enabled: true
+        source:
+          persistentVolumeClaimName: "multi-pvc"
+          volumeSnapshotContentName: "existing-snapshot-content"
+        volumeSnapshotClassName: "multi-snapshotter"
+    asserts:
+      - isKind:
+          of: VolumeSnapshot
+      - equal:
+          path: spec.source.persistentVolumeClaimName
+          value: multi-pvc
+      - equal:
+          path: spec.source.volumeSnapshotContentName
+          value: existing-snapshot-content
+      - equal:
+          path: spec.volumeSnapshotClassName
+          value: multi-snapshotter
+
+  - it: should create volumesnapshot with minimal configuration
+    set:
+      volumeSnapshot:
+        enabled: true
+        source:
+          persistentVolumeClaimName: "minimal-pvc"
+          volumeSnapshotContentName: ""
+    asserts:
+      - isKind:
+          of: VolumeSnapshot
+      - equal:
+          path: spec.source.persistentVolumeClaimName
+          value: minimal-pvc

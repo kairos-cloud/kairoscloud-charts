@@ -1,0 +1,243 @@
+suite: keda scaledobject tests
+templates:
+  - keda/scaledobject.yaml
+tests:
+  - it: should create scaledobject with basic configuration
+    set:
+      keda.enabled: true
+      keda.minReplicas: 2
+      keda.maxReplicas: 10
+      keda.triggers:
+        - type: cpu
+          metadata:
+            type: Utilization
+            value: "70"
+          metricType: Utilization
+    asserts:
+      - isKind:
+          of: ScaledObject
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-kairoscloud-chart
+      - equal:
+          path: spec.scaleTargetRef.name
+          value: RELEASE-NAME-kairoscloud-chart
+      - equal:
+          path: spec.scaleTargetRef.kind
+          value: Deployment
+      - equal:
+          path: spec.minReplicaCount
+          value: 2
+      - equal:
+          path: spec.maxReplicaCount
+          value: 10
+      - equal:
+          path: spec.triggers[0].type
+          value: cpu
+      - equal:
+          path: spec.triggers[0].metadata.type
+          value: Utilization
+      - equal:
+          path: spec.triggers[0].metadata.value
+          value: "70"
+      - equal:
+          path: spec.triggers[0].metricType
+          value: Utilization
+
+  - it: should create scaledobject for statefulset when enabled
+    set:
+      keda.enabled: true
+      statefulset.enabled: true
+      keda.triggers:
+        - type: memory
+          metadata:
+            type: Utilization
+            value: "80"
+          metricType: Utilization
+    asserts:
+      - equal:
+          path: spec.scaleTargetRef.kind
+          value: StatefulSet
+
+  - it: should use autoscaling values as defaults when keda values not set
+    set:
+      keda.enabled: true
+      autoscaling.minReplicas: 3
+      autoscaling.maxReplicas: 20
+      keda.triggers:
+        - type: prometheus
+          metadata:
+            serverAddress: http://prometheus:9090
+            metricName: http_requests_per_second
+            threshold: '100'
+            query: sum(rate(http_requests_total[2m]))
+          metricType: AverageValue
+    asserts:
+      - equal:
+          path: spec.minReplicaCount
+          value: 3
+      - equal:
+          path: spec.maxReplicaCount
+          value: 20
+
+  - it: should create scaledobject with multiple triggers
+    set:
+      keda.enabled: true
+      keda.triggers:
+        - type: cpu
+          metadata:
+            type: Utilization
+            value: "70"
+          metricType: Utilization
+        - type: memory
+          metadata:
+            type: Utilization
+            value: "80"
+          metricType: Utilization
+        - type: prometheus
+          metadata:
+            serverAddress: http://prometheus:9090
+            metricName: http_requests_per_second
+            threshold: '100'
+            query: sum(rate(http_requests_total[2m]))
+          metricType: AverageValue
+    asserts:
+      - equal:
+          path: spec.triggers
+          value:
+            - type: cpu
+              metadata:
+                type: Utilization
+                value: "70"
+              metricType: Utilization
+            - type: memory
+              metadata:
+                type: Utilization
+                value: "80"
+              metricType: Utilization
+            - type: prometheus
+              metadata:
+                serverAddress: http://prometheus:9090
+                metricName: http_requests_per_second
+                threshold: '100'
+                query: sum(rate(http_requests_total[2m]))
+              metricType: AverageValue
+
+  - it: should create scaledobject with advanced configuration
+    set:
+      keda.enabled: true
+      keda.advanced:
+        horizontalPodAutoscalerConfig:
+          behavior:
+            scaleDown:
+              stabilizationWindowSeconds: 300
+              policies:
+              - type: Percent
+                value: 50
+                periodSeconds: 60
+            scaleUp:
+              stabilizationWindowSeconds: 0
+              policies:
+              - type: Percent
+                value: 100
+                periodSeconds: 15
+      keda.triggers:
+        - type: cpu
+          metadata:
+            type: Utilization
+            value: "70"
+          metricType: Utilization
+    asserts:
+      - equal:
+          path: spec.advanced.horizontalPodAutoscalerConfig.behavior.scaleDown.stabilizationWindowSeconds
+          value: 300
+      - equal:
+          path: spec.advanced.horizontalPodAutoscalerConfig.behavior.scaleUp.policies[0].type
+          value: Percent
+
+  - it: should create scaledobject with polling interval and cooldown
+    set:
+      keda.enabled: true
+      keda.pollingInterval: "30s"
+      keda.cooldownPeriod: "300s"
+      keda.idleReplicaCount: 1
+      keda.triggers:
+        - type: cpu
+          metadata:
+            type: Utilization
+            value: "70"
+          metricType: Utilization
+    asserts:
+      - equal:
+          path: spec.pollingInterval
+          value: "30s"
+      - equal:
+          path: spec.cooldownPeriod
+          value: "300s"
+      - equal:
+          path: spec.idleReplicaCount
+          value: 1
+
+  - it: should create scaledobject with authentication reference
+    set:
+      keda.enabled: true
+      keda.triggers:
+        - type: kafka
+          metadata:
+            bootstrapServers: kafka-server:9092
+            consumerGroup: my-group
+            topic: my-topic
+            lagThreshold: '5'
+          authenticationRef:
+            name: kafka-auth
+            kind: Secret
+    asserts:
+      - equal:
+          path: spec.triggers[0].type
+          value: kafka
+      - equal:
+          path: spec.triggers[0].authenticationRef.name
+          value: kafka-auth
+      - equal:
+          path: spec.triggers[0].authenticationRef.kind
+          value: Secret
+
+  - it: should create scaledobject with fallback configuration
+    set:
+      keda.enabled: true
+      keda.fallback:
+        failureThreshold: 3
+        replicas: 1
+      keda.triggers:
+        - type: cpu
+          metadata:
+            type: Utilization
+            value: "70"
+          metricType: Utilization
+    asserts:
+      - equal:
+          path: spec.fallback.failureThreshold
+          value: 3
+      - equal:
+          path: spec.fallback.replicas
+          value: 1
+
+  - it: should create scaledobject with annotations
+    set:
+      keda.enabled: true
+      keda.annotations:
+        description: "KEDA ScaledObject for KairosCloud"
+        version: "2.10.0"
+      keda.triggers:
+        - type: cpu
+          metadata:
+            type: Utilization
+            value: "70"
+          metricType: Utilization
+    asserts:
+      - equal:
+          path: metadata.annotations.description
+          value: "KEDA ScaledObject for KairosCloud"
+      - equal:
+          path: metadata.annotations.version
+          value: "2.10.0"

@@ -1,0 +1,172 @@
+# Test values for comprehensive chart testing
+# This file contains various test scenarios for the kairoscloud-chart
+
+# Basic test scenario
+replicaCount: 2
+
+image:
+  repository: nginx
+  tag: "1.21"
+  pullPolicy: IfNotPresent
+
+# Test with StatefulSet
+statefulset:
+  enabled: true
+  serviceName: "kairoscloud-headless"
+  podManagementPolicy: OrderedReady
+
+# Test with persistence
+persistence:
+  enabled: true
+  storageClass: "fast-ssd"
+  accessMode: ReadWriteOnce
+  size: 20Gi
+
+# Test with autoscaling
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+
+# Test with security features
+networkPolicy:
+  enabled: true
+  ingress:
+    enabled: true
+    ports:
+      - protocol: TCP
+        port: 80
+  egress:
+    enabled: true
+    ports:
+      - protocol: TCP
+        port: 53
+      - protocol: UDP
+        port: 53
+
+rbac:
+  enabled: true
+  rules:
+    - apiGroups: [""]
+      resources: ["pods"]
+      verbs: ["get", "list", "watch"]
+
+secret:
+  enabled: true
+  type: Opaque
+  stringData:
+    database-password: "test-password"
+    api-key: "test-api-key"
+
+# Test with monitoring
+serviceMonitor:
+  enabled: true
+  labels:
+    app: kairoscloud
+  port: http
+  path: /metrics
+  interval: 30s
+
+certificate:
+  enabled: true
+  issuerRef:
+    name: "letsencrypt-prod"
+    kind: ClusterIssuer
+  dnsNames:
+    - "test.kairoscloud.com"
+
+# Test with ingress
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    - host: test.kairoscloud.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: kairoscloud-tls
+      hosts:
+        - test.kairoscloud.com
+
+# Test with resource limits
+resources:
+  limits:
+    cpu: 1000m
+    memory: 2Gi
+  requests:
+    cpu: 500m
+    memory: 1Gi
+
+# Test with PodDisruptionBudget
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# Test with ConfigMap
+configMap:
+  enabled: true
+  data:
+    app.properties: |
+      server.port=8080
+      logging.level=INFO
+    database.properties: |
+      db.host=localhost
+      db.port=5432
+
+# Test with CronJob
+cronJob:
+  enabled: true
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  image:
+    repository: busybox
+    tag: "1.35"
+  command: ["/bin/sh"]
+  args: ["-c", "echo 'Backup completed'"]
+  restartPolicy: OnFailure
+
+# Test with Job
+job:
+  enabled: true
+  image:
+    repository: busybox
+    tag: "1.35"
+  command: ["/bin/sh"]
+  args: ["-c", "echo 'Migration completed'"]
+  restartPolicy: Never
+
+# Test with VolumeSnapshot
+volumeSnapshot:
+  enabled: true
+  source:
+    persistentVolumeClaimName: "kairoscloud-data"
+  volumeSnapshotClassName: "csi-snapshotter"
+
+# Test with LimitRange
+limitRange:
+  enabled: true
+  limits:
+    - type: Container
+      max:
+        cpu: 2
+        memory: 4Gi
+      min:
+        cpu: 100m
+        memory: 128Mi
+      default:
+        cpu: 500m
+        memory: 512Mi
+
+# Test with ResourceQuota
+resourceQuota:
+  enabled: true
+  hard:
+    requests.cpu: "4"
+    requests.memory: 8Gi
+    limits.cpu: "8"
+    limits.memory: 16Gi
+    pods: "20"
+    services: "10"

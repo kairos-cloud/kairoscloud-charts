@@ -1,0 +1,38 @@
+{{- if and .Values.chaosMesh.enabled (and .Values.chaosMesh.podChaos .Values.chaosMesh.podChaos.enabled) }}
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata:
+  name: {{ include "kairoscloud-chart.fullname" . }}-pod-chaos
+  labels:
+    {{- include "kairoscloud-chart.labels" . | nindent 4 }}
+  {{- with .Values.chaosMesh.podChaos.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  mode: {{ .Values.chaosMesh.podChaos.mode | default "one" }}
+  selector:
+    {{- if .Values.chaosMesh.podChaos.selector }}
+    {{- toYaml .Values.chaosMesh.podChaos.selector | nindent 4 }}
+    {{- else }}
+    namespaces:
+      - {{ .Release.Namespace }}
+    labelSelectors:
+      app.kubernetes.io/name: {{ include "kairoscloud-chart.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- end }}
+  duration: {{ .Values.chaosMesh.podChaos.duration | default "30s" }}
+  action: {{ .Values.chaosMesh.podChaos.action | default "pod-failure" }}
+  {{- if .Values.chaosMesh.podChaos.gracePeriod }}
+  gracePeriod: {{ .Values.chaosMesh.podChaos.gracePeriod }}
+  {{- end }}
+  {{- if .Values.chaosMesh.podChaos.containerName }}
+  containerName: {{ .Values.chaosMesh.podChaos.containerName }}
+  {{- end }}
+  {{- if .Values.chaosMesh.podChaos.signal }}
+  signal: {{ .Values.chaosMesh.podChaos.signal }}
+  {{- end }}
+  {{- if .Values.chaosMesh.podChaos.percent }}
+  percent: {{ .Values.chaosMesh.podChaos.percent }}
+  {{- end }}
+{{- end }}

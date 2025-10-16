@@ -1,0 +1,168 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: ingress
+templates:
+  - core/ingress.yaml
+tests:
+  - it: should create ingress with basic configuration
+    set:
+      ingress:
+        enabled: true
+        hosts:
+          - host: chart-example.local
+            paths:
+              - path: /
+                pathType: Prefix
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-kairoscloud-chart
+      - equal:
+          path: spec.rules[0].host
+          value: chart-example.local
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: /
+      - equal:
+          path: spec.rules[0].http.paths[0].pathType
+          value: Prefix
+
+  - it: should create ingress with multiple hosts
+    set:
+      ingress:
+        enabled: true
+        hosts:
+          - host: app1.example.com
+            paths:
+              - path: /api
+                pathType: Prefix
+          - host: app2.example.com
+            paths:
+              - path: /v1
+                pathType: Exact
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: spec.rules[0].host
+          value: app1.example.com
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: /api
+      - equal:
+          path: spec.rules[1].host
+          value: app2.example.com
+      - equal:
+          path: spec.rules[1].http.paths[0].path
+          value: /v1
+
+  - it: should create ingress with tls configuration
+    set:
+      ingress:
+        enabled: true
+        hosts:
+          - host: secure.example.com
+            paths:
+              - path: /
+                pathType: Prefix
+        tls:
+          - secretName: chart-example-tls
+            hosts:
+              - secure.example.com
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: spec.tls[0].secretName
+          value: chart-example-tls
+      - equal:
+          path: spec.tls[0].hosts[0]
+          value: secure.example.com
+
+  - it: should create ingress with annotations
+    set:
+      ingress:
+        enabled: true
+        annotations:
+          kubernetes.io/ingress.class: nginx
+          cert-manager.io/cluster-issuer: letsencrypt-prod
+        hosts:
+          - host: chart-example.local
+            paths:
+              - path: /
+                pathType: Prefix
+    asserts:
+      - isKind:
+          of: Ingress
+      - isAPIVersion:
+          of: networking.k8s.io/v1
+
+  - it: should create ingress with ingressClassName
+    set:
+      ingress:
+        enabled: true
+        className: nginx
+        hosts:
+          - host: chart-example.local
+            paths:
+              - path: /
+                pathType: Prefix
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: spec.ingressClassName
+          value: nginx
+
+  - it: should not create ingress when disabled
+    set:
+      ingress:
+        enabled: false
+    asserts:
+      - isNull:
+          path: metadata
+
+  - it: should create ingress with custom service port
+    set:
+      ingress:
+        enabled: true
+        hosts:
+          - host: chart-example.local
+            paths:
+              - path: /
+                pathType: Prefix
+      service:
+        port: 8080
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.port.number
+          value: 8080
+
+  - it: should create ingress with multiple paths per host
+    set:
+      ingress:
+        enabled: true
+        hosts:
+          - host: api.example.com
+            paths:
+              - path: /api/v1
+                pathType: Prefix
+              - path: /health
+                pathType: Exact
+              - path: /metrics
+                pathType: Prefix
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: /api/v1
+      - equal:
+          path: spec.rules[0].http.paths[1].path
+          value: /health
+      - equal:
+          path: spec.rules[0].http.paths[2].path
+          value: /metrics

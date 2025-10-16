@@ -1,0 +1,16 @@
+{{- if .Values.roleBinding.enabled }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "kairoscloud-chart.fullname" . }}-rolebinding
+  labels:
+    {{- include "kairoscloud-chart.labels" . | nindent 4 }}
+  {{- with .Values.roleBinding.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+roleRef:
+  {{- toYaml .Values.roleBinding.roleRef | nindent 2 }}
+subjects:
+  {{- toYaml .Values.roleBinding.subjects | nindent 2 }}
+{{- end }}

@@ -1,0 +1,373 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: validatingwebhookconfiguration
+templates:
+  - core/validatingwebhookconfiguration.yaml
+tests:
+  - it: should create validating webhook configuration with basic configuration
+    set:
+      validatingWebhookConfiguration:
+        enabled: true
+        webhooks:
+          - name: example-validating-webhook
+            clientConfig:
+              service:
+                name: webhook-service
+                namespace: default
+                path: /validate
+                port: 443
+              caBundle: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t"
+            rules:
+              - operations: ["CREATE", "UPDATE"]
+                apiGroups: [""]
+                apiVersions: ["v1"]
+                resources: ["pods"]
+                scope: "Namespaced"
+            failurePolicy: Fail
+            sideEffects: None
+            admissionReviewVersions: ["v1"]
+    asserts:
+      - isKind:
+          of: ValidatingWebhookConfiguration
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-kairoscloud-chart-validating-webhook
+      - equal:
+          path: webhooks[0].name
+          value: example-validating-webhook
+      - equal:
+          path: webhooks[0].clientConfig.service.name
+          value: webhook-service
+      - equal:
+          path: webhooks[0].clientConfig.service.namespace
+          value: default
+      - equal:
+          path: webhooks[0].clientConfig.service.path
+          value: /validate
+      - equal:
+          path: webhooks[0].clientConfig.service.port
+          value: 443
+      - equal:
+          path: webhooks[0].clientConfig.caBundle
+          value: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t"
+      - equal:
+          path: webhooks[0].rules[0].operations[0]
+          value: CREATE
+      - equal:
+          path: webhooks[0].rules[0].operations[1]
+          value: UPDATE
+      - equal:
+          path: webhooks[0].rules[0].apiGroups[0]
+          value: ""
+      - equal:
+          path: webhooks[0].rules[0].apiVersions[0]
+          value: v1
+      - equal:
+          path: webhooks[0].rules[0].resources[0]
+          value: pods
+      - equal:
+          path: webhooks[0].rules[0].scope
+          value: Namespaced
+      - equal:
+          path: webhooks[0].failurePolicy
+          value: Fail
+      - equal:
+          path: webhooks[0].sideEffects
+          value: None
+      - equal:
+          path: webhooks[0].admissionReviewVersions[0]
+          value: v1
+
+  - it: should create validating webhook configuration with URL client config
+    set:
+      validatingWebhookConfiguration:
+        enabled: true
+        webhooks:
+          - name: url-webhook
+            clientConfig:
+              url: https://webhook.example.com/validate
+              caBundle: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t"
+            rules:
+              - operations: ["CREATE"]
+                apiGroups: ["apps"]
+                apiVersions: ["v1"]
+                resources: ["deployments"]
+            failurePolicy: Ignore
+            sideEffects: NoneOnDryRun
+            admissionReviewVersions: ["v1", "v1beta1"]
+    asserts:
+      - equal:
+          path: webhooks[0].name
+          value: url-webhook
+      - equal:
+          path: webhooks[0].clientConfig.url
+          value: https://webhook.example.com/validate
+      - equal:
+          path: webhooks[0].clientConfig.caBundle
+          value: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t"
+      - equal:
+          path: webhooks[0].failurePolicy
+          value: Ignore
+      - equal:
+          path: webhooks[0].sideEffects
+          value: NoneOnDryRun
+      - equal:
+          path: webhooks[0].admissionReviewVersions[0]
+          value: v1
+      - equal:
+          path: webhooks[0].admissionReviewVersions[1]
+          value: v1beta1
+
+  - it: should create validating webhook configuration with namespace selector
+    set:
+      validatingWebhookConfiguration:
+        enabled: true
+        webhooks:
+          - name: namespace-webhook
+            clientConfig:
+              service:
+                name: webhook-service
+                namespace: default
+                path: /validate
+              caBundle: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t"
+            rules:
+              - operations: ["CREATE", "UPDATE"]
+                apiGroups: [""]
+                apiVersions: ["v1"]
+                resources: ["pods"]
+            namespaceSelector:
+              matchLabels:
+                webhook: enabled
+            failurePolicy: Fail
+            sideEffects: None
+            admissionReviewVersions: ["v1"]
+    asserts:
+      - equal:
+          path: webhooks[0].name
+          value: namespace-webhook
+      - equal:
+          path: webhooks[0].namespaceSelector.matchLabels.webhook
+          value: enabled
+
+  - it: should create validating webhook configuration with object selector
+    set:
+      validatingWebhookConfiguration:
+        enabled: true
+        webhooks:
+          - name: object-webhook
+            clientConfig:
+              service:
+                name: webhook-service
+                namespace: default
+                path: /validate
+              caBundle: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t"
+            rules:
+              - operations: ["CREATE"]
+                apiGroups: [""]
+                apiVersions: ["v1"]
+                resources: ["pods"]
+            objectSelector:
+              matchLabels:
+                app: myapp
+            failurePolicy: Fail
+            sideEffects: None
+            admissionReviewVersions: ["v1"]
+    asserts:
+      - equal:
+          path: webhooks[0].name
+          value: object-webhook
+      - equal:
+          path: webhooks[0].objectSelector.matchLabels.app
+          value: myapp
+
+  - it: should create validating webhook configuration with match policy and timeout
+    set:
+      validatingWebhookConfiguration:
+        enabled: true
+        webhooks:
+          - name: advanced-webhook
+            clientConfig:
+              service:
+                name: webhook-service
+                namespace: default
+                path: /validate
+              caBundle: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t"
+            rules:
+              - operations: ["CREATE", "UPDATE"]
+                apiGroups: [""]
+                apiVersions: ["v1"]
+                resources: ["pods"]
+            matchPolicy: Equivalent
+            timeoutSeconds: 30
+            failurePolicy: Fail
+            sideEffects: None
+            admissionReviewVersions: ["v1"]
+    asserts:
+      - equal:
+          path: webhooks[0].name
+          value: advanced-webhook
+      - equal:
+          path: webhooks[0].matchPolicy
+          value: Equivalent
+      - equal:
+          path: webhooks[0].timeoutSeconds
+          value: 30
+
+  - it: should create validating webhook configuration with multiple webhooks
+    set:
+      validatingWebhookConfiguration:
+        enabled: true
+        webhooks:
+          - name: webhook-1
+            clientConfig:
+              service:
+                name: webhook-service-1
+                namespace: default
+                path: /validate1
+              caBundle: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t"
+            rules:
+              - operations: ["CREATE"]
+                apiGroups: [""]
+                apiVersions: ["v1"]
+                resources: ["pods"]
+            failurePolicy: Fail
+            sideEffects: None
+            admissionReviewVersions: ["v1"]
+          - name: webhook-2
+            clientConfig:
+              service:
+                name: webhook-service-2
+                namespace: default
+                path: /validate2
+              caBundle: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t"
+            rules:
+              - operations: ["UPDATE"]
+                apiGroups: ["apps"]
+                apiVersions: ["v1"]
+                resources: ["deployments"]
+            failurePolicy: Ignore
+            sideEffects: NoneOnDryRun
+            admissionReviewVersions: ["v1"]
+    asserts:
+      - equal:
+          path: webhooks[0].name
+          value: webhook-1
+      - equal:
+          path: webhooks[0].clientConfig.service.name
+          value: webhook-service-1
+      - equal:
+          path: webhooks[0].clientConfig.service.path
+          value: /validate1
+      - equal:
+          path: webhooks[1].name
+          value: webhook-2
+      - equal:
+          path: webhooks[1].clientConfig.service.name
+          value: webhook-service-2
+      - equal:
+          path: webhooks[1].clientConfig.service.path
+          value: /validate2
+
+  - it: should create validating webhook configuration with annotations
+    set:
+      validatingWebhookConfiguration:
+        enabled: true
+        annotations:
+          cert-manager.io/inject-ca-from: "default/webhook-ca"
+          description: "Example validating webhook"
+        webhooks:
+          - name: annotated-webhook
+            clientConfig:
+              service:
+                name: webhook-service
+                namespace: default
+                path: /validate
+              caBundle: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t"
+            rules:
+              - operations: ["CREATE"]
+                apiGroups: [""]
+                apiVersions: ["v1"]
+                resources: ["pods"]
+            failurePolicy: Fail
+            sideEffects: None
+            admissionReviewVersions: ["v1"]
+    asserts:
+      - equal:
+          path: metadata.annotations["cert-manager.io/inject-ca-from"]
+          value: "default/webhook-ca"
+      - equal:
+          path: metadata.annotations.description
+          value: "Example validating webhook"
+
+  - it: should create validating webhook configuration with complex rules
+    set:
+      validatingWebhookConfiguration:
+        enabled: true
+        webhooks:
+          - name: complex-webhook
+            clientConfig:
+              service:
+                name: webhook-service
+                namespace: default
+                path: /validate
+              caBundle: "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0t"
+            rules:
+              - operations: ["CREATE", "UPDATE", "DELETE"]
+                apiGroups: [""]
+                apiVersions: ["v1"]
+                resources: ["pods", "services"]
+                scope: "Namespaced"
+              - operations: ["CREATE", "UPDATE"]
+                apiGroups: ["apps"]
+                apiVersions: ["v1"]
+                resources: ["deployments", "statefulsets"]
+                scope: "Namespaced"
+              - operations: ["CREATE"]
+                apiGroups: ["networking.k8s.io"]
+                apiVersions: ["v1"]
+                resources: ["networkpolicies"]
+                scope: "Namespaced"
+            failurePolicy: Fail
+            sideEffects: None
+            admissionReviewVersions: ["v1"]
+    asserts:
+      - equal:
+          path: webhooks[0].name
+          value: complex-webhook
+      - equal:
+          path: webhooks[0].rules[0].operations[0]
+          value: CREATE
+      - equal:
+          path: webhooks[0].rules[0].operations[1]
+          value: UPDATE
+      - equal:
+          path: webhooks[0].rules[0].operations[2]
+          value: DELETE
+      - equal:
+          path: webhooks[0].rules[0].resources[0]
+          value: pods
+      - equal:
+          path: webhooks[0].rules[0].resources[1]
+          value: services
+      - equal:
+          path: webhooks[0].rules[1].apiGroups[0]
+          value: apps
+      - equal:
+          path: webhooks[0].rules[1].resources[0]
+          value: deployments
+      - equal:
+          path: webhooks[0].rules[1].resources[1]
+          value: statefulsets
+      - equal:
+          path: webhooks[0].rules[2].apiGroups[0]
+          value: networking.k8s.io
+      - equal:
+          path: webhooks[0].rules[2].resources[0]
+          value: networkpolicies
+
+  - it: should not create validating webhook configuration when disabled
+    set:
+      validatingWebhookConfiguration:
+        enabled: false
+    asserts:
+      - isNull:
+          path: kind

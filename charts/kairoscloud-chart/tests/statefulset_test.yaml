@@ -1,0 +1,313 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: statefulset
+templates:
+  - core/statefulset.yaml
+tests:
+  - it: should create statefulset with basic configuration
+    set:
+      deployment:
+        enabled: false
+      statefulset:
+        enabled: true
+        serviceName: "my-service"
+        podManagementPolicy: OrderedReady
+        updateStrategy:
+          type: RollingUpdate
+        replicaCount: 3
+        image:
+          repository: nginx
+          tag: "1.21"
+          pullPolicy: IfNotPresent
+    asserts:
+      - isKind:
+          of: StatefulSet
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-kairoscloud-chart
+      - equal:
+          path: spec.serviceName
+          value: my-service
+      - equal:
+          path: spec.replicas
+          value: 3
+      - equal:
+          path: spec.podManagementPolicy
+          value: OrderedReady
+      - equal:
+          path: spec.updateStrategy.type
+          value: RollingUpdate
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: nginx:1.21
+
+  - it: should create statefulset with default service name
+    set:
+      deployment:
+        enabled: false
+      statefulset:
+        enabled: true
+        serviceName: ""
+    asserts:
+      - isKind:
+          of: StatefulSet
+      - equal:
+          path: spec.serviceName
+          value: RELEASE-NAME-kairoscloud-chart-headless
+
+  - it: should create statefulset with persistence enabled
+    set:
+      deployment:
+        enabled: false
+      statefulset:
+        enabled: true
+      persistence:
+        enabled: true
+        size: 20Gi
+        accessMode: ReadWriteOnce
+        storageClass: fast-ssd
+    asserts:
+      - isKind:
+          of: StatefulSet
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
+          value: 20Gi
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.accessModes[0]
+          value: ReadWriteOnce
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.storageClassName
+          value: fast-ssd
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].name
+          value: data
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: /data
+
+  - it: should create statefulset with extra volumes and volume mounts
+    set:
+      deployment:
+        enabled: false
+      statefulset:
+        enabled: true
+        extraVolumes:
+          - name: config-volume
+            configMap:
+              name: my-config
+        extraVolumeMounts:
+          - name: config-volume
+            mountPath: /etc/config
+    asserts:
+      - isKind:
+          of: StatefulSet
+      - equal:
+          path: spec.template.spec.volumes[0].name
+          value: config-volume
+      - equal:
+          path: spec.template.spec.volumes[0].configMap.name
+          value: my-config
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].name
+          value: config-volume
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: /etc/config
+
+  - it: should create statefulset with environment variables
+    set:
+      deployment:
+        enabled: false
+      statefulset:
+        enabled: true
+        env:
+          - name: ENV_VAR_1
+            value: "value1"
+          - name: ENV_VAR_2
+            value: "value2"
+    asserts:
+      - isKind:
+          of: StatefulSet
+      - equal:
+          path: spec.template.spec.containers[0].env[0].name
+          value: ENV_VAR_1
+      - equal:
+          path: spec.template.spec.containers[0].env[0].value
+          value: value1
+      - equal:
+          path: spec.template.spec.containers[0].env[1].name
+          value: ENV_VAR_2
+      - equal:
+          path: spec.template.spec.containers[0].env[1].value
+          value: value2
+
+  - it: should create statefulset with probes enabled
+    set:
+      deployment:
+        enabled: false
+      statefulset:
+        enabled: true
+        livenessProbe:
+          enabled: true
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          enabled: true
+          httpGet:
+            path: /ready
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        startupProbe:
+          enabled: true
+          httpGet:
+            path: /startup
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 10
+    asserts:
+      - isKind:
+          of: StatefulSet
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /health
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
+          value: /ready
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.httpGet.path
+          value: /startup
+
+  - it: should create statefulset with node selector and affinity
+    set:
+      deployment:
+        enabled: false
+      statefulset:
+        enabled: true
+      nodeSelector:
+        kubernetes.io/os: linux
+        node-type: stateful
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/arch
+                    operator: In
+                    values:
+                      - amd64
+    asserts:
+      - isKind:
+          of: StatefulSet
+      - isAPIVersion:
+          of: apps/v1
+
+  - it: should create statefulset with tolerations
+    set:
+      deployment:
+        enabled: false
+      statefulset:
+        enabled: true
+        tolerations:
+          - key: "key1"
+            operator: "Equal"
+            value: "value1"
+            effect: "NoSchedule"
+          - key: "key2"
+            operator: "Exists"
+            effect: "NoExecute"
+    asserts:
+      - isKind:
+          of: StatefulSet
+      - equal:
+          path: spec.template.spec.tolerations[0].key
+          value: key1
+      - equal:
+          path: spec.template.spec.tolerations[0].operator
+          value: Equal
+      - equal:
+          path: spec.template.spec.tolerations[1].key
+          value: key2
+      - equal:
+          path: spec.template.spec.tolerations[1].operator
+          value: Exists
+
+  - it: should not create statefulset when disabled
+    set:
+      statefulset:
+        enabled: false
+    asserts:
+      - isNull:
+          path: metadata
+
+  - it: should create statefulset with image pull secrets
+    set:
+      deployment:
+        enabled: false
+      statefulset:
+        enabled: true
+        imagePullSecrets:
+          - name: my-registry-secret
+          - name: another-secret
+    asserts:
+      - isKind:
+          of: StatefulSet
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0].name
+          value: my-registry-secret
+      - equal:
+          path: spec.template.spec.imagePullSecrets[1].name
+          value: another-secret
+
+  - it: should create statefulset with pod annotations
+    set:
+      deployment:
+        enabled: false
+      statefulset:
+        enabled: true
+      podAnnotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+    asserts:
+      - isKind:
+          of: StatefulSet
+      - isAPIVersion:
+          of: apps/v1
+
+  - it: should create statefulset with default empty podSecurityContext
+    set:
+      statefulset:
+        enabled: true
+        image:
+          repository: nginx
+    asserts:
+      - isKind:
+          of: StatefulSet
+      - equal:
+          path: spec.template.spec.securityContext
+          value: {}
+
+  - it: should create statefulset with explicit podSecurityContext configuration
+    set:
+      statefulset:
+        enabled: true
+        image:
+          repository: nginx
+        podSecurityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          fsGroup: 2000
+    asserts:
+      - isKind:
+          of: StatefulSet
+      - equal:
+          path: spec.template.spec.securityContext.runAsNonRoot
+          value: true
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 1000
+      - equal:
+          path: spec.template.spec.securityContext.fsGroup
+          value: 2000

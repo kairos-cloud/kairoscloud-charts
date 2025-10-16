@@ -1,0 +1,50 @@
+{{- if and .Values.chaosMesh.enabled (and .Values.chaosMesh.ioChaos .Values.chaosMesh.ioChaos.enabled) }}
+apiVersion: chaos-mesh.org/v1alpha1
+kind: IOChaos
+metadata:
+  name: {{ include "kairoscloud-chart.fullname" . }}-io-chaos
+  labels:
+    {{- include "kairoscloud-chart.labels" . | nindent 4 }}
+  {{- with .Values.chaosMesh.ioChaos.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  mode: {{ .Values.chaosMesh.ioChaos.mode | default "one" }}
+  selector:
+    {{- if .Values.chaosMesh.ioChaos.selector }}
+    {{- toYaml .Values.chaosMesh.ioChaos.selector | nindent 4 }}
+    {{- else }}
+    namespaces:
+      - {{ .Release.Namespace }}
+    labelSelectors:
+      app.kubernetes.io/name: {{ include "kairoscloud-chart.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- end }}
+  duration: {{ .Values.chaosMesh.ioChaos.duration | default "30s" }}
+  action: {{ .Values.chaosMesh.ioChaos.action | default "latency" }}
+  {{- if .Values.chaosMesh.ioChaos.delay }}
+  delay: {{ .Values.chaosMesh.ioChaos.delay }}
+  {{- end }}
+  {{- if .Values.chaosMesh.ioChaos.errno }}
+  errno: {{ .Values.chaosMesh.ioChaos.errno }}
+  {{- end }}
+  {{- if .Values.chaosMesh.ioChaos.attr }}
+  attr:
+    {{- toYaml .Values.chaosMesh.ioChaos.attr | nindent 4 }}
+  {{- end }}
+  {{- if .Values.chaosMesh.ioChaos.methods }}
+  methods:
+    {{- toYaml .Values.chaosMesh.ioChaos.methods | nindent 4 }}
+  {{- end }}
+  {{- if .Values.chaosMesh.ioChaos.paths }}
+  paths:
+    {{- toYaml .Values.chaosMesh.ioChaos.paths | nindent 4 }}
+  {{- end }}
+  {{- if .Values.chaosMesh.ioChaos.percent }}
+  percent: {{ .Values.chaosMesh.ioChaos.percent }}
+  {{- end }}
+  {{- if .Values.chaosMesh.ioChaos.volumePath }}
+  volumePath: {{ .Values.chaosMesh.ioChaos.volumePath }}
+  {{- end }}
+{{- end }}

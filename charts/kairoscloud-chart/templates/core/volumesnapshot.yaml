@@ -1,0 +1,23 @@
+{{- if .Values.volumeSnapshot.enabled }}
+apiVersion: snapshot.storage.k8s.io/v1
+kind: VolumeSnapshot
+metadata:
+  name: {{ include "kairoscloud-chart.fullname" . }}-snapshot
+  labels:
+    {{- include "kairoscloud-chart.labels" . | nindent 4 }}
+  {{- with .Values.volumeSnapshot.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  source:
+    {{- if .Values.volumeSnapshot.source.persistentVolumeClaimName }}
+    persistentVolumeClaimName: {{ .Values.volumeSnapshot.source.persistentVolumeClaimName }}
+    {{- end }}
+    {{- if .Values.volumeSnapshot.source.volumeSnapshotContentName }}
+    volumeSnapshotContentName: {{ .Values.volumeSnapshot.source.volumeSnapshotContentName }}
+    {{- end }}
+  {{- if .Values.volumeSnapshot.volumeSnapshotClassName }}
+  volumeSnapshotClassName: {{ .Values.volumeSnapshot.volumeSnapshotClassName }}
+  {{- end }}
+{{- end }}

@@ -1,0 +1,286 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: job
+templates:
+  - core/job.yaml
+tests:
+  - it: should create job with basic configuration
+    set:
+      job:
+        enabled: true
+        image:
+          repository: busybox
+          tag: "1.35"
+          pullPolicy: IfNotPresent
+        command:
+          - /bin/sh
+        args:
+          - -c
+          - echo "Hello World"
+    asserts:
+      - isKind:
+          of: Job
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-kairoscloud-chart-job
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: busybox:1.35
+      - equal:
+          path: spec.template.spec.containers[0].command[0]
+          value: /bin/sh
+      - equal:
+          path: spec.template.spec.containers[0].args[0]
+          value: -c
+      - equal:
+          path: spec.template.spec.restartPolicy
+          value: Never
+
+  - it: should create job with custom configuration
+    set:
+      job:
+        enabled: true
+        activeDeadlineSeconds: 300
+        backoffLimit: 3
+        completions: 5
+        parallelism: 2
+        ttlSecondsAfterFinished: 3600
+        restartPolicy: OnFailure
+        image:
+          repository: alpine
+          tag: "3.18"
+    asserts:
+      - isKind:
+          of: Job
+      - equal:
+          path: spec.activeDeadlineSeconds
+          value: 300
+      - equal:
+          path: spec.backoffLimit
+          value: 3
+      - equal:
+          path: spec.completions
+          value: 5
+      - equal:
+          path: spec.parallelism
+          value: 2
+      - equal:
+          path: spec.ttlSecondsAfterFinished
+          value: 3600
+      - equal:
+          path: spec.template.spec.restartPolicy
+          value: OnFailure
+
+  - it: should create job with environment variables
+    set:
+      job:
+        enabled: true
+        image:
+          repository: busybox
+        env:
+          - name: ENV_VAR_1
+            value: "value1"
+          - name: ENV_VAR_2
+            value: "value2"
+    asserts:
+      - isKind:
+          of: Job
+      - equal:
+          path: spec.template.spec.containers[0].env[0].name
+          value: ENV_VAR_1
+      - equal:
+          path: spec.template.spec.containers[0].env[0].value
+          value: value1
+      - equal:
+          path: spec.template.spec.containers[0].env[1].name
+          value: ENV_VAR_2
+      - equal:
+          path: spec.template.spec.containers[0].env[1].value
+          value: value2
+
+  - it: should create job with resources
+    set:
+      job:
+        enabled: true
+        image:
+          repository: busybox
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 250m
+            memory: 256Mi
+    asserts:
+      - isKind:
+          of: Job
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.cpu
+          value: 500m
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: 512Mi
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: 250m
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.memory
+          value: 256Mi
+
+  - it: should create job with volumes and volume mounts
+    set:
+      job:
+        enabled: true
+        image:
+          repository: busybox
+        volumes:
+          - name: config-volume
+            configMap:
+              name: my-config
+          - name: data-volume
+            emptyDir: {}
+        volumeMounts:
+          - name: config-volume
+            mountPath: /etc/config
+          - name: data-volume
+            mountPath: /data
+    asserts:
+      - isKind:
+          of: Job
+      - equal:
+          path: spec.template.spec.volumes[0].name
+          value: config-volume
+      - equal:
+          path: spec.template.spec.volumes[0].configMap.name
+          value: my-config
+      - equal:
+          path: spec.template.spec.volumes[1].name
+          value: data-volume
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].name
+          value: config-volume
+      - equal:
+          path: spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: /etc/config
+
+  - it: should create job with node selector and affinity
+    set:
+      job:
+        enabled: true
+        image:
+          repository: busybox
+        nodeSelector:
+          kubernetes.io/os: linux
+          node-type: worker
+        affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+                - matchExpressions:
+                    - key: kubernetes.io/arch
+                      operator: In
+                      values:
+                        - amd64
+    asserts:
+      - isKind:
+          of: Job
+      - isAPIVersion:
+          of: batch/v1
+
+  - it: should create job with tolerations
+    set:
+      job:
+        enabled: true
+        image:
+          repository: busybox
+        tolerations:
+          - key: "key1"
+            operator: "Equal"
+            value: "value1"
+            effect: "NoSchedule"
+          - key: "key2"
+            operator: "Exists"
+            effect: "NoExecute"
+    asserts:
+      - isKind:
+          of: Job
+      - equal:
+          path: spec.template.spec.tolerations[0].key
+          value: key1
+      - equal:
+          path: spec.template.spec.tolerations[0].operator
+          value: Equal
+      - equal:
+          path: spec.template.spec.tolerations[1].key
+          value: key2
+      - equal:
+          path: spec.template.spec.tolerations[1].operator
+          value: Exists
+
+  - it: should create job with security context
+    set:
+      job:
+        enabled: true
+        image:
+          repository: busybox
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          fsGroup: 2000
+    asserts:
+      - isKind:
+          of: Job
+      - equal:
+          path: spec.template.spec.securityContext.runAsNonRoot
+          value: true
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 1000
+      - equal:
+          path: spec.template.spec.securityContext.fsGroup
+          value: 2000
+
+  - it: should create job with annotations
+    set:
+      job:
+        enabled: true
+        image:
+          repository: busybox
+        annotations:
+          job-type: "batch-processing"
+          priority: "high"
+    asserts:
+      - isKind:
+          of: Job
+      - equal:
+          path: metadata.annotations.job-type
+          value: batch-processing
+      - equal:
+          path: metadata.annotations.priority
+          value: high
+
+  - it: should create job with image pull secrets
+    set:
+      job:
+        enabled: true
+        image:
+          repository: busybox
+        imagePullSecrets:
+          - name: my-registry-secret
+          - name: another-secret
+    asserts:
+      - isKind:
+          of: Job
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0].name
+          value: my-registry-secret
+      - equal:
+          path: spec.template.spec.imagePullSecrets[1].name
+          value: another-secret
+
+  - it: should not create job when disabled
+    set:
+      job:
+        enabled: false
+    asserts:
+      - isNull:
+          path: metadata

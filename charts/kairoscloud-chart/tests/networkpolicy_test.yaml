@@ -1,0 +1,280 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: networkpolicy
+templates:
+  - core/networkpolicy.yaml
+tests:
+  - it: should not create networkpolicy when disabled
+    set:
+      networkPolicy:
+        enabled: false
+    asserts:
+      - isNull:
+          path: metadata
+
+  - it: should create networkpolicy with default values
+    set:
+      networkPolicy:
+        enabled: true
+        ingress:
+          enabled: true
+          ports:
+            - protocol: TCP
+              port: 80
+        egress:
+          enabled: true
+    asserts:
+      - isKind:
+          of: NetworkPolicy
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-kairoscloud-chart
+      - isAPIVersion:
+          of: networking.k8s.io/v1
+      - contains:
+          path: spec.policyTypes
+          content: Ingress
+      - contains:
+          path: spec.policyTypes
+          content: Egress
+      - equal:
+          path: spec.ingress[0].ports[0].protocol
+          value: TCP
+      - equal:
+          path: spec.ingress[0].ports[0].port
+          value: 80
+
+  - it: should create networkpolicy with namespace selector
+    set:
+      networkPolicy:
+        enabled: true
+        ingress:
+          enabled: true
+          namespaceSelector:
+            name: monitoring
+          ports:
+            - protocol: TCP
+              port: 9090
+        egress:
+          enabled: true
+    asserts:
+      - isKind:
+          of: NetworkPolicy
+      - equal:
+          path: spec.ingress[0].from[0].namespaceSelector.matchLabels.name
+          value: monitoring
+      - equal:
+          path: spec.ingress[0].ports[0].protocol
+          value: TCP
+      - equal:
+          path: spec.ingress[0].ports[0].port
+          value: 9090
+
+  - it: should create networkpolicy with pod selector
+    set:
+      networkPolicy:
+        enabled: true
+        ingress:
+          enabled: true
+          podSelector:
+            app: frontend
+          ports:
+            - protocol: TCP
+              port: 8080
+        egress:
+          enabled: true
+    asserts:
+      - isKind:
+          of: NetworkPolicy
+      - equal:
+          path: spec.ingress[0].from[0].podSelector.matchLabels.app
+          value: frontend
+      - equal:
+          path: spec.ingress[0].ports[0].protocol
+          value: TCP
+      - equal:
+          path: spec.ingress[0].ports[0].port
+          value: 8080
+
+  - it: should create networkpolicy with ip blocks
+    set:
+      networkPolicy:
+        enabled: true
+        ingress:
+          enabled: true
+          ipBlocks:
+            - cidr: 192.168.1.0/24
+              except:
+                - 192.168.1.1
+          ports:
+            - protocol: TCP
+              port: 443
+        egress:
+          enabled: true
+    asserts:
+      - isKind:
+          of: NetworkPolicy
+      - equal:
+          path: spec.ingress[0].from[0].ipBlock.cidr
+          value: 192.168.1.0/24
+      - equal:
+          path: spec.ingress[0].from[0].ipBlock.except[0]
+          value: 192.168.1.1
+      - equal:
+          path: spec.ingress[0].ports[0].protocol
+          value: TCP
+      - equal:
+          path: spec.ingress[0].ports[0].port
+          value: 443
+
+  - it: should create networkpolicy with multiple ingress rules
+    set:
+      networkPolicy:
+        enabled: true
+        ingress:
+          enabled: true
+          namespaceSelector:
+            name: monitoring
+          podSelector:
+            app: frontend
+          ipBlocks:
+            - cidr: 10.0.0.0/8
+          ports:
+            - protocol: TCP
+              port: 80
+            - protocol: TCP
+              port: 443
+        egress:
+          enabled: true
+    asserts:
+      - isKind:
+          of: NetworkPolicy
+      - equal:
+          path: spec.ingress[0].from[0].namespaceSelector.matchLabels.name
+          value: monitoring
+      - equal:
+          path: spec.ingress[0].from[1].podSelector.matchLabels.app
+          value: frontend
+      - equal:
+          path: spec.ingress[0].from[2].ipBlock.cidr
+          value: 10.0.0.0/8
+      - equal:
+          path: spec.ingress[0].ports[0].protocol
+          value: TCP
+      - equal:
+          path: spec.ingress[0].ports[0].port
+          value: 80
+      - equal:
+          path: spec.ingress[0].ports[1].protocol
+          value: TCP
+      - equal:
+          path: spec.ingress[0].ports[1].port
+          value: 443
+
+  - it: should create networkpolicy with egress rules
+    set:
+      networkPolicy:
+        enabled: true
+        ingress:
+          enabled: true
+        egress:
+          enabled: true
+          namespaceSelector:
+            name: database
+          podSelector:
+            app: postgres
+          ipBlocks:
+            - cidr: 0.0.0.0/0
+          ports:
+            - protocol: TCP
+              port: 5432
+    asserts:
+      - isKind:
+          of: NetworkPolicy
+      - equal:
+          path: spec.egress[0].to[0].namespaceSelector.matchLabels.name
+          value: database
+      - equal:
+          path: spec.egress[0].to[1].podSelector.matchLabels.app
+          value: postgres
+      - equal:
+          path: spec.egress[0].to[2].ipBlock.cidr
+          value: 0.0.0.0/0
+      - equal:
+          path: spec.egress[0].ports[0].protocol
+          value: TCP
+      - equal:
+          path: spec.egress[0].ports[0].port
+          value: 5432
+
+  - it: should create networkpolicy with UDP protocol
+    set:
+      networkPolicy:
+        enabled: true
+        ingress:
+          enabled: true
+          ports:
+            - protocol: UDP
+              port: 53
+        egress:
+          enabled: true
+    asserts:
+      - isKind:
+          of: NetworkPolicy
+      - equal:
+          path: spec.ingress[0].ports[0].protocol
+          value: UDP
+      - equal:
+          path: spec.ingress[0].ports[0].port
+          value: 53
+
+  - it: should create networkpolicy with disabled ingress
+    set:
+      networkPolicy:
+        enabled: true
+        ingress:
+          enabled: false
+        egress:
+          enabled: true
+    asserts:
+      - isKind:
+          of: NetworkPolicy
+      - equal:
+          path: spec.ingress[0]
+          value: {}
+
+  - it: should create networkpolicy with disabled egress
+    set:
+      networkPolicy:
+        enabled: true
+        ingress:
+          enabled: true
+          ports:
+            - protocol: TCP
+              port: 80
+        egress:
+          enabled: false
+    asserts:
+      - isKind:
+          of: NetworkPolicy
+      - equal:
+          path: spec.egress[0]
+          value: {}
+
+  - it: should create networkpolicy with custom name
+    set:
+      fullnameOverride: "custom-app"
+      networkPolicy:
+        enabled: true
+        ingress:
+          enabled: true
+          ports:
+            - protocol: TCP
+              port: 80
+        egress:
+          enabled: true
+    asserts:
+      - isKind:
+          of: NetworkPolicy
+      - equal:
+          path: metadata.name
+          value: custom-app

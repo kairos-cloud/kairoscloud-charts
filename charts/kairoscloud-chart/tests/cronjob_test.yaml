@@ -1,0 +1,337 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: cronjob
+templates:
+  - core/cronjob.yaml
+tests:
+  - it: should create cronjob with basic configuration
+    set:
+      cronJob:
+        enabled: true
+        schedule: '0 0 * * *'
+        image:
+          repository: busybox
+          tag: "1.35"
+          pullPolicy: IfNotPresent
+        command:
+          - /bin/sh
+        args:
+          - -c
+          - echo "Hello World"
+    asserts:
+      - isKind:
+          of: CronJob
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-kairoscloud-chart-cronjob
+      - equal:
+          path: spec.schedule
+          value: "0 0 * * *"
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].image
+          value: busybox:1.35
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].command[0]
+          value: /bin/sh
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.restartPolicy
+          value: OnFailure
+
+  - it: should create cronjob with custom configuration
+    set:
+      cronJob:
+        enabled: true
+        schedule: "0 */5 * * *"
+        timeZone: "UTC"
+        concurrencyPolicy: Forbid
+        failedJobsHistoryLimit: 3
+        successfulJobsHistoryLimit: 5
+        suspend: false
+        activeDeadlineSeconds: 600
+        backoffLimit: 2
+        ttlSecondsAfterFinished: 1800
+        image:
+          repository: alpine
+          tag: "3.18"
+    asserts:
+      - isKind:
+          of: CronJob
+      - equal:
+          path: spec.schedule
+          value: "0 */5 * * *"
+      - equal:
+          path: spec.timeZone
+          value: UTC
+      - equal:
+          path: spec.concurrencyPolicy
+          value: Forbid
+      - equal:
+          path: spec.failedJobsHistoryLimit
+          value: 3
+      - equal:
+          path: spec.successfulJobsHistoryLimit
+          value: 5
+      - equal:
+          path: spec.suspend
+          value: false
+      - equal:
+          path: spec.jobTemplate.spec.activeDeadlineSeconds
+          value: 600
+      - equal:
+          path: spec.jobTemplate.spec.backoffLimit
+          value: 2
+      - equal:
+          path: spec.jobTemplate.spec.ttlSecondsAfterFinished
+          value: 1800
+
+  - it: should create cronjob with different concurrency policies
+    set:
+      cronJob:
+        enabled: true
+        schedule: '0 0 * * *'
+        concurrencyPolicy: Allow
+        image:
+          repository: busybox
+    asserts:
+      - isKind:
+          of: CronJob
+      - equal:
+          path: spec.concurrencyPolicy
+          value: Allow
+
+  - it: should create cronjob with suspend enabled
+    set:
+      cronJob:
+        enabled: true
+        schedule: '0 0 * * *'
+        suspend: true
+        image:
+          repository: busybox
+    asserts:
+      - isKind:
+          of: CronJob
+      - equal:
+          path: spec.suspend
+          value: true
+
+  - it: should create cronjob with environment variables
+    set:
+      cronJob:
+        enabled: true
+        schedule: '0 0 * * *'
+        image:
+          repository: busybox
+        env:
+          - name: ENV_VAR_1
+            value: "value1"
+          - name: ENV_VAR_2
+            value: "value2"
+    asserts:
+      - isKind:
+          of: CronJob
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env[0].name
+          value: ENV_VAR_1
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env[0].value
+          value: value1
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env[1].name
+          value: ENV_VAR_2
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env[1].value
+          value: value2
+
+  - it: should create cronjob with resources
+    set:
+      cronJob:
+        enabled: true
+        schedule: '0 0 * * *'
+        image:
+          repository: busybox
+        resources:
+          limits:
+            cpu: 200m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+    asserts:
+      - isKind:
+          of: CronJob
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].resources.limits.cpu
+          value: 200m
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].resources.limits.memory
+          value: 256Mi
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].resources.requests.cpu
+          value: 100m
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].resources.requests.memory
+          value: 128Mi
+
+  - it: should create cronjob with volumes and volume mounts
+    set:
+      cronJob:
+        enabled: true
+        schedule: '0 0 * * *'
+        image:
+          repository: busybox
+        volumes:
+          - name: config-volume
+            configMap:
+              name: my-config
+          - name: data-volume
+            emptyDir: {}
+        volumeMounts:
+          - name: config-volume
+            mountPath: /etc/config
+          - name: data-volume
+            mountPath: /data
+    asserts:
+      - isKind:
+          of: CronJob
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.volumes[0].name
+          value: config-volume
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.volumes[0].configMap.name
+          value: my-config
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.volumes[1].name
+          value: data-volume
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].volumeMounts[0].name
+          value: config-volume
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].volumeMounts[0].mountPath
+          value: /etc/config
+
+  - it: should create cronjob with node selector and affinity
+    set:
+      cronJob:
+        enabled: true
+        schedule: '0 0 * * *'
+        image:
+          repository: busybox
+        nodeSelector:
+          kubernetes.io/os: linux
+          node-type: worker
+        affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+                - matchExpressions:
+                    - key: kubernetes.io/arch
+                      operator: In
+                      values:
+                        - amd64
+    asserts:
+      - isKind:
+          of: CronJob
+      - isAPIVersion:
+          of: batch/v1
+
+  - it: should create cronjob with tolerations
+    set:
+      cronJob:
+        enabled: true
+        schedule: '0 0 * * *'
+        image:
+          repository: busybox
+        tolerations:
+          - key: "key1"
+            operator: "Equal"
+            value: "value1"
+            effect: "NoSchedule"
+          - key: "key2"
+            operator: "Exists"
+            effect: "NoExecute"
+    asserts:
+      - isKind:
+          of: CronJob
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.tolerations[0].key
+          value: key1
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.tolerations[0].operator
+          value: Equal
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.tolerations[1].key
+          value: key2
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.tolerations[1].operator
+          value: Exists
+
+  - it: should create cronjob with security context
+    set:
+      cronJob:
+        enabled: true
+        schedule: '0 0 * * *'
+        image:
+          repository: busybox
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          fsGroup: 2000
+    asserts:
+      - isKind:
+          of: CronJob
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.securityContext.runAsNonRoot
+          value: true
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.securityContext.runAsUser
+          value: 1000
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.securityContext.fsGroup
+          value: 2000
+
+  - it: should create cronjob with annotations
+    set:
+      cronJob:
+        enabled: true
+        schedule: '0 0 * * *'
+        image:
+          repository: busybox
+        annotations:
+          cronjob-type: "backup"
+          priority: "medium"
+    asserts:
+      - isKind:
+          of: CronJob
+      - equal:
+          path: metadata.annotations.cronjob-type
+          value: backup
+      - equal:
+          path: metadata.annotations.priority
+          value: medium
+
+  - it: should create cronjob with image pull secrets
+    set:
+      cronJob:
+        enabled: true
+        schedule: '0 0 * * *'
+        image:
+          repository: busybox
+        imagePullSecrets:
+          - name: my-registry-secret
+          - name: another-secret
+    asserts:
+      - isKind:
+          of: CronJob
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.imagePullSecrets[0].name
+          value: my-registry-secret
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.imagePullSecrets[1].name
+          value: another-secret
+
+  - it: should not create cronjob when disabled
+    set:
+      cronJob:
+        enabled: false
+    asserts:
+      - isNull:
+          path: metadata

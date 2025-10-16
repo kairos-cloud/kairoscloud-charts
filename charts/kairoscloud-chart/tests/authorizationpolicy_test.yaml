@@ -1,0 +1,108 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/helm-unittest/helm-unittest/main/schema/helm-testsuite.json
+suite: authorizationpolicy
+templates:
+  - istio/authorizationpolicy.yaml
+tests:
+  - it: should create authorizationpolicy with basic configuration
+    set:
+      istio:
+        enabled: true
+        authorizationPolicy:
+          enabled: true
+          action: DENY
+          rules:
+            - from:
+              - source:
+                  principals: ["cluster.local/ns/default/sa/sleep"]
+              to:
+              - operation:
+                  methods: ["GET"]
+    asserts:
+      - isKind:
+          of: AuthorizationPolicy
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-kairoscloud-chart
+      - equal:
+          path: spec.action
+          value: DENY
+      - equal:
+          path: spec.rules[0].from[0].source.principals[0]
+          value: cluster.local/ns/default/sa/sleep
+
+  - it: should create authorizationpolicy with default selector
+    set:
+      istio:
+        enabled: true
+        authorizationPolicy:
+          enabled: true
+          action: ALLOW
+    asserts:
+      - isKind:
+          of: AuthorizationPolicy
+      - equal:
+          path: spec.action
+          value: ALLOW
+
+  - it: should create authorizationpolicy with custom selector
+    set:
+      istio:
+        enabled: true
+        authorizationPolicy:
+          enabled: true
+          action: ALLOW
+          selector:
+            matchLabels:
+              app: custom-app
+    asserts:
+      - isKind:
+          of: AuthorizationPolicy
+      - equal:
+          path: spec.selector.matchLabels.app
+          value: custom-app
+
+  - it: should create authorizationpolicy with annotations
+    set:
+      istio:
+        enabled: true
+        authorizationPolicy:
+          enabled: true
+          action: ALLOW
+          annotations:
+            test-annotation: "test-value"
+    asserts:
+      - isKind:
+          of: AuthorizationPolicy
+      - equal:
+          path: metadata.annotations.test-annotation
+          value: "test-value"
+
+  - it: should create authorizationpolicy with multiple rules
+    set:
+      istio:
+        enabled: true
+        authorizationPolicy:
+          enabled: true
+          action: ALLOW
+          rules:
+            - from:
+              - source:
+                  principals: ["cluster.local/ns/default/sa/admin"]
+              to:
+              - operation:
+                  methods: ["GET", "POST"]
+            - from:
+              - source:
+                  namespaces: ["default"]
+              to:
+              - operation:
+                  paths: ["/api/*"]
+    asserts:
+      - isKind:
+          of: AuthorizationPolicy
+      - equal:
+          path: spec.rules[0].from[0].source.principals[0]
+          value: cluster.local/ns/default/sa/admin
+      - equal:
+          path: spec.rules[1].from[0].source.namespaces[0]
+          value: default

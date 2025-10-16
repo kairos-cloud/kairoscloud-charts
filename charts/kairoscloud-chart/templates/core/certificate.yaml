@@ -1,0 +1,42 @@
+{{- if .Values.certificate.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "kairoscloud-chart.fullname" . }}-tls
+  labels:
+    {{- include "kairoscloud-chart.labels" . | nindent 4 }}
+  {{- with .Values.certificate.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  secretName: {{ include "kairoscloud-chart.fullname" . }}-tls
+  issuerRef:
+    name: {{ .Values.certificate.issuerRef.name }}
+    kind: {{ .Values.certificate.issuerRef.kind | default "Issuer" }}
+    group: {{ .Values.certificate.issuerRef.group | default "cert-manager.io" }}
+  dnsNames:
+    {{- range .Values.certificate.dnsNames }}
+    - {{ . }}
+    {{- end }}
+  {{- if .Values.certificate.commonName }}
+  commonName: {{ .Values.certificate.commonName }}
+  {{- end }}
+  {{- if .Values.certificate.duration }}
+  duration: {{ .Values.certificate.duration }}
+  {{- end }}
+  {{- if .Values.certificate.renewBefore }}
+  renewBefore: {{ .Values.certificate.renewBefore }}
+  {{- end }}
+  {{- if .Values.certificate.usages }}
+  usages:
+    {{- toYaml .Values.certificate.usages | nindent 4 }}
+  {{- end }}
+  {{- if .Values.certificate.keyAlgorithm }}
+  privateKey:
+    algorithm: {{ .Values.certificate.keyAlgorithm }}
+    {{- if .Values.certificate.keySize }}
+    size: {{ .Values.certificate.keySize }}
+    {{- end }}
+  {{- end }}
+{{- end }}

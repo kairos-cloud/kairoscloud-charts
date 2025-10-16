@@ -1,0 +1,56 @@
+{{- if .Values.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "kairoscloud-chart.fullname" . }}
+  labels:
+    {{- include "kairoscloud-chart.labels" . | nindent 4 }}
+    {{- with .Values.serviceMonitor.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.serviceMonitor.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "kairoscloud-chart.selectorLabels" . | nindent 6 }}
+  endpoints:
+    - port: {{ .Values.serviceMonitor.port | default "http" }}
+      path: {{ .Values.serviceMonitor.path | default "/metrics" }}
+      {{- if .Values.serviceMonitor.interval }}
+      interval: {{ .Values.serviceMonitor.interval }}
+      {{- end }}
+      {{- if .Values.serviceMonitor.scrapeTimeout }}
+      scrapeTimeout: {{ .Values.serviceMonitor.scrapeTimeout }}
+      {{- end }}
+      {{- if .Values.serviceMonitor.scheme }}
+      scheme: {{ .Values.serviceMonitor.scheme }}
+      {{- end }}
+      {{- if .Values.serviceMonitor.tlsConfig }}
+      tlsConfig:
+        {{- toYaml .Values.serviceMonitor.tlsConfig | nindent 8 }}
+      {{- end }}
+      {{- if .Values.serviceMonitor.bearerTokenSecret }}
+      bearerTokenSecret:
+        name: {{ .Values.serviceMonitor.bearerTokenSecret.name }}
+        key: {{ .Values.serviceMonitor.bearerTokenSecret.key }}
+      {{- end }}
+      {{- if .Values.serviceMonitor.basicAuth }}
+      basicAuth:
+        username:
+          name: {{ .Values.serviceMonitor.basicAuth.username.name }}
+          key: {{ .Values.serviceMonitor.basicAuth.username.key }}
+        password:
+          name: {{ .Values.serviceMonitor.basicAuth.password.name }}
+          key: {{ .Values.serviceMonitor.basicAuth.password.key }}
+      {{- end }}
+  {{- if .Values.serviceMonitor.namespaceSelector }}
+  namespaceSelector:
+    {{- toYaml .Values.serviceMonitor.namespaceSelector | nindent 4 }}
+  {{- end }}
+  {{- if .Values.serviceMonitor.sampleLimit }}
+  sampleLimit: {{ .Values.serviceMonitor.sampleLimit }}
+  {{- end }}
+{{- end }}

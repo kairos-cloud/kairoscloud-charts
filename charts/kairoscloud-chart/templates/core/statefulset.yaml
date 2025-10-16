@@ -1,0 +1,109 @@
+{{- if .Values.statefulset.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "kairoscloud-chart.fullname" . }}
+  labels:
+    {{- include "kairoscloud-chart.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ .Values.statefulset.serviceName | default (printf "%s-headless" (include "kairoscloud-chart.fullname" .)) }}
+  {{- if not .Values.keda.enabled }}
+  replicas: {{ .Values.statefulset.replicaCount }}
+  {{- end }}
+  podManagementPolicy: {{ .Values.statefulset.podManagementPolicy }}
+  updateStrategy:
+    {{- toYaml .Values.statefulset.updateStrategy | nindent 4 }}
+  selector:
+    matchLabels:
+      {{- include "kairoscloud-chart.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.statefulset.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "kairoscloud-chart.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.statefulset.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "kairoscloud-chart.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.statefulset.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.statefulset.securityContext | nindent 12 }}
+          image: "{{ .Values.statefulset.image.repository }}:{{ .Values.statefulset.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.statefulset.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.targetPort }}
+              protocol: TCP
+          {{- if .Values.statefulset.livenessProbe.enabled }}
+          livenessProbe:
+            {{- toYaml .Values.statefulset.livenessProbe | nindent 12 }}
+          {{- end }}
+          {{- if .Values.statefulset.readinessProbe.enabled }}
+          readinessProbe:
+            {{- toYaml .Values.statefulset.readinessProbe | nindent 12 }}
+          {{- end }}
+          {{- if .Values.statefulset.startupProbe.enabled }}
+          startupProbe:
+            {{- toYaml .Values.statefulset.startupProbe | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.statefulset.resources | nindent 12 }}
+          {{- if .Values.statefulset.env }}
+          env:
+            {{- toYaml .Values.statefulset.env | nindent 12 }}
+          {{- end }}
+          {{- if or .Values.statefulset.extraVolumeMounts .Values.persistence.enabled }}
+          volumeMounts:
+            {{- if .Values.statefulset.extraVolumeMounts }}
+            {{- toYaml .Values.statefulset.extraVolumeMounts | nindent 12 }}
+            {{- end }}
+            {{- if .Values.persistence.enabled }}
+            - name: data
+              mountPath: /data
+            {{- end }}
+          {{- end }}
+      {{- if or .Values.statefulset.extraVolumes .Values.persistence.enabled }}
+      volumes:
+        {{- if .Values.statefulset.extraVolumes }}
+        {{- toYaml .Values.statefulset.extraVolumes | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.statefulset.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.statefulset.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.statefulset.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  {{- if .Values.persistence.enabled }}
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+      {{- with .Values.persistence.annotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      accessModes:
+        - {{ .Values.persistence.accessMode }}
+      resources:
+        requests:
+          storage: {{ .Values.persistence.size }}
+      {{- if .Values.persistence.storageClass }}
+      storageClassName: {{ .Values.persistence.storageClass }}
+      {{- end }}
+  {{- end }}
+{{- end }}

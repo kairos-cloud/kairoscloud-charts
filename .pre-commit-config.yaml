@@ -1,0 +1,83 @@
+# Pre-commit hooks configuration for Helm charts
+# Install with: pip install pre-commit && pre-commit install
+
+repos:
+  # YAML formatting and validation
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: '\.(md|txt)$'
+      - id: end-of-file-fixer
+        exclude: '\.(md|txt)$'
+      - id: check-yaml
+        args: ['--unsafe']
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: mixed-line-ending
+        args: ['--fix=lf']
+
+  # YAML specific formatting
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.32.0
+    hooks:
+      - id: yamllint
+        args: [-c=.yamllint]
+        files: \.(yaml|yml)$
+
+  # Helm specific hooks
+  - repo: https://github.com/gruntwork-io/pre-commit
+    rev: v0.1.20
+    hooks:
+      - id: helmlint
+        name: Helm Lint
+        description: Run helm lint on all charts
+        entry: bash -c 'for chart in charts/*/; do if [ -f "$chart/Chart.yaml" ]; then echo "Linting $chart"; helm lint "$chart" --strict; fi; done'
+        language: system
+        files: ^charts/.*\.(yaml|yml|tpl)$
+        pass_filenames: false
+
+      - id: helm-unittest
+        name: Helm Unit Tests
+        description: Run helm unittest on all charts
+        entry: bash -c 'for chart in charts/*/; do if [ -f "$chart/Chart.yaml" ]; then echo "Testing $chart"; helm unittest "$chart" --color --strict; fi; done'
+        language: system
+        files: ^charts/.*\.(yaml|yml|tpl)$
+        pass_filenames: false
+
+  # Security scanning
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.4.0
+    hooks:
+      - id: detect-secrets
+        args: ['--baseline', '.secrets.baseline']
+        exclude: |
+          (?x)^(
+            \.secrets\.baseline|
+            charts/.*/tests/.*|
+            \.github/.*
+          )$
+
+  # Markdown formatting
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.35.0
+    hooks:
+      - id: markdownlint
+        args: ['--fix']
+        files: \.md$
+
+  # Shell script formatting
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.9.0.6
+    hooks:
+      - id: shellcheck
+        files: \.(sh|bash)$
+
+# Configuration for yamllint
+default_language_version:
+  python: python3
+
+# Minimum pre-commit version
+minimum_pre_commit_version: 2.0.0
