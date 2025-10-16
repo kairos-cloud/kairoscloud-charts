@@ -29,10 +29,10 @@ spec:
   loadBalancerSourceRanges:
     {{- toYaml .Values.service.loadBalancerSourceRanges | nindent 4 }}
   {{- end }}
-  {{- if .Values.service.ipFamily }}
+  {{- if and .Values.service.ipFamily (ne .Values.service.ipFamily "") }}
   ipFamily: {{ .Values.service.ipFamily }}
   {{- end }}
-  {{- if .Values.service.ipFamilyPolicy }}
+  {{- if and .Values.service.ipFamilyPolicy (ne .Values.service.ipFamilyPolicy "") }}
   ipFamilyPolicy: {{ .Values.service.ipFamilyPolicy }}
   {{- end }}
   selector:

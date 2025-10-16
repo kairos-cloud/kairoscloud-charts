@@ -42,15 +42,15 @@ spec:
             - name: http
               containerPort: {{ .Values.service.targetPort }}
               protocol: TCP
-          {{- if .Values.statefulset.livenessProbe.enabled }}
+          {{- if and .Values.statefulset.livenessProbe (ne (len .Values.statefulset.livenessProbe) 0) }}
           livenessProbe:
             {{- toYaml .Values.statefulset.livenessProbe | nindent 12 }}
           {{- end }}
-          {{- if .Values.statefulset.readinessProbe.enabled }}
+          {{- if and .Values.statefulset.readinessProbe (ne (len .Values.statefulset.readinessProbe) 0) }}
           readinessProbe:
             {{- toYaml .Values.statefulset.readinessProbe | nindent 12 }}
           {{- end }}
-          {{- if .Values.statefulset.startupProbe.enabled }}
+          {{- if and .Values.statefulset.startupProbe (ne (len .Values.statefulset.startupProbe) 0) }}
           startupProbe:
             {{- toYaml .Values.statefulset.startupProbe | nindent 12 }}
           {{- end }}

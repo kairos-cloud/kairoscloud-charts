@@ -206,9 +206,6 @@ deployment:
   #                If the probe fails, Kubernetes will restart the container.
   #                Reference: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
   livenessProbe:
-    # enabled: Whether to enable the liveness probe.
-    enabled: true
-    
     # httpGet: HTTP GET request configuration for the probe.
     #          Other options include tcpSocket, exec, grpc.
     httpGet:
@@ -237,9 +234,6 @@ deployment:
   #                 If the probe fails, the Pod will be removed from service endpoints.
   #                 Reference: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
   readinessProbe:
-    # enabled: Whether to enable the readiness probe.
-    enabled: true
-    
     # httpGet: HTTP GET request configuration for the probe.
     httpGet:
       # path: HTTP path to check (e.g., /ready, /health/ready)
@@ -263,32 +257,9 @@ deployment:
   # Startup probe
   # startupProbe: Health check to determine if the container has started.
   #               This probe is useful for slow-starting containers.
+  #               Set to {} to disable the startup probe.
   #               Reference: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
-  startupProbe:
-    # enabled: Whether to enable the startup probe.
-    enabled: false
-    
-    # httpGet: HTTP GET request configuration for the probe.
-    httpGet:
-      # path: HTTP path to check (e.g., /startup, /health/startup)
-      path: /startup
-      # port: Port to check (can be port name or number)
-      port: http
-    
-    # initialDelaySeconds: Number of seconds after the container has started before startup probes are initiated.
-    initialDelaySeconds: 10
-    
-    # periodSeconds: How often (in seconds) to perform the probe.
-    #                Should be shorter than the expected startup time.
-    periodSeconds: 10
-    
-    # timeoutSeconds: Number of seconds after which the probe times out.
-    timeoutSeconds: 1
-    
-    # failureThreshold: Minimum consecutive failures for the probe to be considered failed.
-    #                   After this many failures, the container will be restarted.
-    #                   Should be high enough to allow for slow startup times.
-    failureThreshold: 30
+  startupProbe: {}
 
 # Service configuration
 # Service is an abstraction which defines a logical set of Pods and a policy by which to access them.
@@ -562,11 +533,6 @@ statefulset:
   
   # Liveness and readiness probes
   livenessProbe:
-    # enabled: Whether to enable the liveness probe.
-    #          If the probe fails, Kubernetes will restart the container.
-    #          Reference: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
-    enabled: true
-    
     # httpGet: HTTP GET request configuration for the probe.
     #          Other options include tcpSocket, exec, grpc.
     httpGet:
@@ -592,11 +558,6 @@ statefulset:
     failureThreshold: 3
   
   readinessProbe:
-    # enabled: Whether to enable the readiness probe.
-    #          If the probe fails, the Pod will be removed from service endpoints.
-    #          Reference: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
-    enabled: true
-    
     # httpGet: HTTP GET request configuration for the probe.
     httpGet:
       # path: HTTP path to check (e.g., /ready, /health/ready)
@@ -618,33 +579,11 @@ statefulset:
     failureThreshold: 3
   
   # Startup probe
-  startupProbe:
-    # enabled: Whether to enable the startup probe.
-    #          This probe is useful for slow-starting containers.
-    #          Reference: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
-    enabled: false
-    
-    # httpGet: HTTP GET request configuration for the probe.
-    httpGet:
-      # path: HTTP path to check (e.g., /startup, /health/startup)
-      path: /startup
-      # port: Port to check (can be port name or number)
-      port: http
-    
-    # initialDelaySeconds: Number of seconds after the container has started before startup probes are initiated.
-    initialDelaySeconds: 10
-    
-    # periodSeconds: How often (in seconds) to perform the probe.
-    #                Should be shorter than the expected startup time.
-    periodSeconds: 10
-    
-    # timeoutSeconds: Number of seconds after which the probe times out.
-    timeoutSeconds: 1
-    
-    # failureThreshold: Minimum consecutive failures for the probe to be considered failed.
-    #                   After this many failures, the container will be restarted.
-    #                   Should be high enough to allow for slow startup times.
-    failureThreshold: 30
+  # startupProbe: Health check to determine if the container has started.
+  #               This probe is useful for slow-starting containers.
+  #               Set to {} to disable the startup probe.
+  #               Reference: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+  startupProbe: {}
 
 # DaemonSet specific configuration
 # DaemonSet ensures that all (or some) Nodes run a copy of a Pod.
@@ -775,11 +714,6 @@ daemonset:
   
   # Liveness and readiness probes
   livenessProbe:
-    # enabled: Whether to enable the liveness probe.
-    #          If the probe fails, Kubernetes will restart the container.
-    #          Reference: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
-    enabled: true
-    
     # httpGet: HTTP GET request configuration for the probe.
     #          Other options include tcpSocket, exec, grpc.
     httpGet:
@@ -805,11 +739,6 @@ daemonset:
     failureThreshold: 3
   
   readinessProbe:
-    # enabled: Whether to enable the readiness probe.
-    #          If the probe fails, the Pod will be removed from service endpoints.
-    #          Reference: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
-    enabled: true
-    
     # httpGet: HTTP GET request configuration for the probe.
     httpGet:
       # path: HTTP path to check (e.g., /ready, /health/ready)
@@ -831,33 +760,11 @@ daemonset:
     failureThreshold: 3
   
   # Startup probe
-  startupProbe:
-    # enabled: Whether to enable the startup probe.
-    #          This probe is useful for slow-starting containers.
-    #          Reference: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
-    enabled: false
-    
-    # httpGet: HTTP GET request configuration for the probe.
-    httpGet:
-      # path: HTTP path to check (e.g., /startup, /health/startup)
-      path: /startup
-      # port: Port to check (can be port name or number)
-      port: http
-    
-    # initialDelaySeconds: Number of seconds after the container has started before startup probes are initiated.
-    initialDelaySeconds: 10
-    
-    # periodSeconds: How often (in seconds) to perform the probe.
-    #                Should be shorter than the expected startup time.
-    periodSeconds: 10
-    
-    # timeoutSeconds: Number of seconds after which the probe times out.
-    timeoutSeconds: 1
-    
-    # failureThreshold: Minimum consecutive failures for the probe to be considered failed.
-    #                   After this many failures, the container will be restarted.
-    #                   Should be high enough to allow for slow startup times.
-    failureThreshold: 30
+  # startupProbe: Health check to determine if the container has started.
+  #               This probe is useful for slow-starting containers.
+  #               Set to {} to disable the startup probe.
+  #               Reference: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+  startupProbe: {}
 
 # PersistentVolumeClaim configuration
 # PersistentVolumeClaim (PVC) is a request for storage by a user.
