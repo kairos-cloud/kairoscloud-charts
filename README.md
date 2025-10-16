@@ -43,6 +43,7 @@ helm uninstall my-kairoscloud --namespace production
 ## 🎯 Supported Kubernetes Resources
 
 ### 🏗️ **Core Workloads**
+
 | Resource | Description |
 |----------|-------------|
 | **Deployment** | Stateless applications with rolling updates |
@@ -52,6 +53,7 @@ helm uninstall my-kairoscloud --namespace production
 | **CronJob** | Scheduled and recurring tasks |
 
 ### 🌐 **Networking & Services**
+
 | Resource | Description |
 |----------|-------------|
 | **Service** | Internal service discovery and load balancing |
@@ -60,6 +62,7 @@ helm uninstall my-kairoscloud --namespace production
 | **ServiceAccount** | RBAC and security contexts for pods |
 
 ### 💾 **Storage & Persistence**
+
 | Resource | Description |
 |----------|-------------|
 | **PersistentVolumeClaim** | Persistent storage with configurable storage classes |
@@ -67,12 +70,14 @@ helm uninstall my-kairoscloud --namespace production
 | **StorageClass** | Storage provisioner definitions |
 
 ### 🔐 **Configuration & Secrets**
+
 | Resource | Description |
 |----------|-------------|
 | **ConfigMap** | Configuration data and environment variables |
 | **Secret** | Sensitive data like passwords and API keys |
 
 ### 📈 **Autoscaling & Performance**
+
 | Resource | Description |
 |----------|-------------|
 | **HorizontalPodAutoscaler** | CPU/memory-based autoscaling |
@@ -80,6 +85,7 @@ helm uninstall my-kairoscloud --namespace production
 | **PodDisruptionBudget** | High availability during cluster disruptions |
 
 ### 🔍 **Observability & Monitoring**
+
 | Resource | Description |
 |----------|-------------|
 | **ServiceMonitor** (Prometheus) | Metrics collection and monitoring |
@@ -87,12 +93,14 @@ helm uninstall my-kairoscloud --namespace production
 | **Telemetry** (Istio) | Distributed tracing and metrics in service mesh |
 
 ### 🛡️ **Resource Management**
+
 | Resource | Description |
 |----------|-------------|
 | **LimitRange** | Enforcing resource limits and requests |
 | **ResourceQuota** | Namespace-level resource constraints |
 
 ### 🔐 **RBAC & Security**
+
 | Resource | Description |
 |----------|-------------|
 | **ClusterRole** | Cluster-wide permissions |
@@ -101,6 +109,7 @@ helm uninstall my-kairoscloud --namespace production
 | **RoleBinding** | Bind roles to users/groups |
 
 ### 🌐 **Istio Service Mesh**
+
 | Resource | Description |
 |----------|-------------|
 | **Gateway** | Service mesh ingress/egress configuration |
@@ -110,11 +119,13 @@ helm uninstall my-kairoscloud --namespace production
 | **RequestAuthentication** | JWT-based authentication |
 
 ### 🔒 **Certificate Management**
+
 | Resource | Description |
 |----------|-------------|
 | **Certificate** (cert-manager) | Automatic TLS certificate management |
 
 ### 🧪 **Chaos Engineering (Chaos Mesh)**
+
 | Resource | Description |
 |----------|-------------|
 | **PodChaos** | Pod failure and container kill experiments |
