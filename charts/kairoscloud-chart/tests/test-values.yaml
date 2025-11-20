@@ -5,7 +5,7 @@
 replicaCount: 2
 
 image:
-  repository: nginx
+  repository: alpine
   tag: "1.21"
   pullPolicy: IfNotPresent
 

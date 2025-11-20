@@ -89,8 +89,8 @@ deployment:
   # image: Configuration for the main container image.
   image:
     # repository: The container image repository (without tag).
-    #             Examples: "nginx", "myregistry.com/myapp", "gcr.io/project/app"
-    repository: nginx
+    #             Examples: "alpine", "myregistry.com/myapp", "gcr.io/project/app"
+    repository: alpine
     
     # pullPolicy: The image pull policy for the container.
     #             Options: "Always", "IfNotPresent", "Never"
@@ -103,7 +103,7 @@ deployment:
     # tag: Overrides the image tag whose default is the chart appVersion.
     #      If empty, uses the chart's appVersion.
     #      Examples: "1.20", "latest", "v1.0.0"
-    tag: ""
+    tag: "3.22"
   
   # imagePullSecrets: List of secrets to use for pulling images from private registries.
   #                   Each secret must contain credentials for the registry.
@@ -430,10 +430,10 @@ statefulset:
   replicaCount: 1
   
   image:
-    repository: nginx
+    repository: alpine
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
-    tag: ""
+    tag: "3.22"
   
   # imagePullSecrets: List of secrets to use for pulling images from private registries.
   #                   Each secret must contain credentials for the registry.
@@ -605,10 +605,10 @@ daemonset:
   
   # Pod configuration (similar to deployment and statefulset)
   image:
-    repository: nginx
+    repository: alpine
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
-    tag: ""
+    tag: "3.22"
   
   # imagePullSecrets: List of secrets to use for pulling images from private registries.
   #                   Each secret must contain credentials for the registry.
@@ -1322,7 +1322,7 @@ cronJob:
   # Container image configuration
   image:
     # repository: The container image repository (without tag).
-    repository: nginx
+    repository: alpine
     
     # tag: The image tag to use.
     #      If empty, uses the chart's appVersion.
@@ -1470,7 +1470,7 @@ job:
   # Container image configuration
   image:
     # repository: The container image repository (without tag).
-    repository: nginx
+    repository: alpine
     
     # tag: The image tag to use.
     #      If empty, uses the chart's appVersion.
