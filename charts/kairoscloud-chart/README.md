@@ -1,3 +1,5 @@
+[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/kairoscloud)](https://artifacthub.io/packagkairoscloudes/search?repo=)
+
 # KairosCloud Helm Chart
 
 A Helm chart for deploying KairosCloud application on Kubernetes.

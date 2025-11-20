@@ -15,7 +15,7 @@ tests:
           value: 1
       - equal:
           path: spec.template.spec.containers[0].image
-          value: nginx:1.0.0
+          value: alpine:3.22
       - equal:
           path: spec.template.spec.containers[0].name
           value: kairoscloud-chart
@@ -297,7 +297,7 @@ tests:
       deployment:
         enabled: true
         image:
-          repository: nginx
+          repository: alpine
     asserts:
       - isKind:
           of: Deployment
@@ -310,7 +310,7 @@ tests:
       deployment:
         enabled: true
         image:
-          repository: nginx
+          repository: alpine
         podSecurityContext:
           runAsNonRoot: true
           runAsUser: 1000
@@ -364,7 +364,7 @@ tests:
             command:
               - /bin/sh
               - -c
-              - "pgrep nginx"
+              - "pgrep alpine"
           initialDelaySeconds: 20
           periodSeconds: 10
           successThreshold: 1
@@ -378,7 +378,7 @@ tests:
           value: -c
       - equal:
           path: spec.template.spec.containers[0].livenessProbe.exec.command[2]
-          value: pgrep nginx
+          value: pgrep alpine
       - equal:
           path: spec.template.spec.containers[0].livenessProbe.initialDelaySeconds
           value: 20
